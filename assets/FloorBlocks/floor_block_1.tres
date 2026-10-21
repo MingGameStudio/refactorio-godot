@@ -1,0 +1,7 @@
+[gd_resource type="AtlasTexture" format=3 uid="uid://b8floorblock1"]
+
+[ext_resource type="Texture2D" uid="uid://bnoxn0c1gn8y8" path="res://assets/FloorBlocks.png" id="1_atlas"]
+
+[resource]
+atlas = ExtResource("1_atlas")
+region = Rect2(59.416138, 53.60765, 543.5235, 535.0478)

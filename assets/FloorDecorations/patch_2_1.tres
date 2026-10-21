@@ -1,0 +1,7 @@
+[gd_resource type="AtlasTexture" format=3 uid="uid://b8decopatch21"]
+
+[ext_resource type="Texture2D" uid="uid://b67g5urwqfkam" path="res://assets/FloorDecorations.png" id="1_atlas"]
+
+[resource]
+atlas = ExtResource("1_atlas")
+region = Rect2(515.6413, 316.50226, 482, 222.70636)

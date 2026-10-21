@@ -1,0 +1,770 @@
+[gd_scene format=3 uid="uid://bmain2dgrid"]
+
+[ext_resource type="Script" uid="uid://mjy7xu3qmk2x" path="res://Main.gd" id="1_main"]
+[ext_resource type="Script" uid="uid://bt5620p5g4svv" path="res://GridOverlay.gd" id="2_grid"]
+[ext_resource type="Script" uid="uid://biqdkcpcfdcfi" path="res://ItemLayer.gd" id="3_item"]
+[ext_resource type="Texture2D" uid="uid://b8floorblock1" path="res://assets/FloorBlocks/floor_block_1.tres" id="4_fb1"]
+[ext_resource type="Texture2D" uid="uid://b8floorblock2" path="res://assets/FloorBlocks/floor_block_2.tres" id="5_fb2"]
+[ext_resource type="Texture2D" uid="uid://b8floorblock3" path="res://assets/FloorBlocks/floor_block_3.tres" id="6_fb3"]
+[ext_resource type="Texture2D" uid="uid://b8floorblock4" path="res://assets/FloorBlocks/floor_block_4.tres" id="7_fb4"]
+[ext_resource type="Texture2D" uid="uid://b8decopatch11" path="res://assets/FloorDecorations/patch_1_1.tres" id="8_d1"]
+[ext_resource type="Texture2D" uid="uid://b8decopatch12" path="res://assets/FloorDecorations/patch_1_2.tres" id="9_d2"]
+[ext_resource type="Texture2D" uid="uid://b8decopatch21" path="res://assets/FloorDecorations/patch_2_1.tres" id="11_d4"]
+[ext_resource type="Texture2D" uid="uid://b8decopatch22" path="res://assets/FloorDecorations/patch_2_2.tres" id="12_d5"]
+[ext_resource type="Texture2D" uid="uid://b8decopatch23" path="res://assets/FloorDecorations/patch_2_3.tres" id="13_d6"]
+[ext_resource type="Texture2D" uid="uid://b8decopatch31" path="res://assets/FloorDecorations/patch_3_1.tres" id="14_d7"]
+[ext_resource type="Texture2D" uid="uid://b8decopatch32" path="res://assets/FloorDecorations/patch_3_2.tres" id="15_d8"]
+
+[node name="Main" type="Node2D" unique_id=1685539245]
+script = ExtResource("1_main")
+
+[node name="FloorLayer" type="Node2D" parent="." unique_id=1957421631]
+
+[node name="BG" type="ColorRect" parent="FloorLayer" unique_id=731948202]
+offset_right = 768.0
+offset_bottom = 512.0
+color = Color(0.12, 0.12, 0.14, 1)
+
+[node name="Floor_0_0" type="Sprite2D" parent="FloorLayer" unique_id=1473797123]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("4_fb1")
+centered = false
+
+[node name="Floor_0_1" type="Sprite2D" parent="FloorLayer" unique_id=647074068]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(0, 64)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("5_fb2")
+centered = false
+
+[node name="Floor_0_2" type="Sprite2D" parent="FloorLayer" unique_id=898904925]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(0, 128)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("6_fb3")
+centered = false
+
+[node name="Floor_0_3" type="Sprite2D" parent="FloorLayer" unique_id=2137266256]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(0, 192)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("7_fb4")
+centered = false
+
+[node name="Floor_0_4" type="Sprite2D" parent="FloorLayer" unique_id=1225791702]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(0, 256)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("4_fb1")
+centered = false
+
+[node name="Floor_0_5" type="Sprite2D" parent="FloorLayer" unique_id=2072652987]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(0, 320)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("5_fb2")
+centered = false
+
+[node name="Floor_0_6" type="Sprite2D" parent="FloorLayer" unique_id=1156212540]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(0, 384)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("6_fb3")
+centered = false
+
+[node name="Floor_0_7" type="Sprite2D" parent="FloorLayer" unique_id=1597582910]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(0, 448)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("7_fb4")
+centered = false
+
+[node name="Floor_1_0" type="Sprite2D" parent="FloorLayer" unique_id=901034911]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(64, 0)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("7_fb4")
+centered = false
+
+[node name="Floor_1_1" type="Sprite2D" parent="FloorLayer" unique_id=1410994888]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(64, 64)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("4_fb1")
+centered = false
+
+[node name="Floor_1_2" type="Sprite2D" parent="FloorLayer" unique_id=1575982978]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(64, 128)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("5_fb2")
+centered = false
+
+[node name="Floor_1_3" type="Sprite2D" parent="FloorLayer" unique_id=692866955]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(64, 192)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("6_fb3")
+centered = false
+
+[node name="Floor_1_4" type="Sprite2D" parent="FloorLayer" unique_id=585901587]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(64, 256)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("7_fb4")
+centered = false
+
+[node name="Floor_1_5" type="Sprite2D" parent="FloorLayer" unique_id=20947774]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(64, 320)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("4_fb1")
+centered = false
+
+[node name="Floor_1_6" type="Sprite2D" parent="FloorLayer" unique_id=1287701537]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(64, 384)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("5_fb2")
+centered = false
+
+[node name="Floor_1_7" type="Sprite2D" parent="FloorLayer" unique_id=875872121]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(64, 448)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("6_fb3")
+centered = false
+
+[node name="Floor_2_0" type="Sprite2D" parent="FloorLayer" unique_id=805431229]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(128, 0)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("6_fb3")
+centered = false
+
+[node name="Floor_2_1" type="Sprite2D" parent="FloorLayer" unique_id=385079300]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(128, 64)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("7_fb4")
+centered = false
+
+[node name="Floor_2_2" type="Sprite2D" parent="FloorLayer" unique_id=1307103579]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(128, 128)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("4_fb1")
+centered = false
+
+[node name="Floor_2_3" type="Sprite2D" parent="FloorLayer" unique_id=1886078371]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(128, 192)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("5_fb2")
+centered = false
+
+[node name="Floor_2_4" type="Sprite2D" parent="FloorLayer" unique_id=1866391191]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(128, 256)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("6_fb3")
+centered = false
+
+[node name="Floor_2_5" type="Sprite2D" parent="FloorLayer" unique_id=1172688913]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(128, 320)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("7_fb4")
+centered = false
+
+[node name="Floor_2_6" type="Sprite2D" parent="FloorLayer" unique_id=1328091410]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(128, 384)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("4_fb1")
+centered = false
+
+[node name="Floor_2_7" type="Sprite2D" parent="FloorLayer" unique_id=939173673]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(128, 448)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("5_fb2")
+centered = false
+
+[node name="Floor_3_0" type="Sprite2D" parent="FloorLayer" unique_id=1948416532]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(192, 0)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("5_fb2")
+centered = false
+
+[node name="Floor_3_1" type="Sprite2D" parent="FloorLayer" unique_id=270047589]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(192, 64)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("6_fb3")
+centered = false
+
+[node name="Floor_3_2" type="Sprite2D" parent="FloorLayer" unique_id=1671023163]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(192, 128)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("7_fb4")
+centered = false
+
+[node name="Floor_3_3" type="Sprite2D" parent="FloorLayer" unique_id=1538254540]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(192, 192)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("4_fb1")
+centered = false
+
+[node name="Floor_3_4" type="Sprite2D" parent="FloorLayer" unique_id=745456870]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(192, 256)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("5_fb2")
+centered = false
+
+[node name="Floor_3_5" type="Sprite2D" parent="FloorLayer" unique_id=1328759284]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(192, 320)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("6_fb3")
+centered = false
+
+[node name="Floor_3_6" type="Sprite2D" parent="FloorLayer" unique_id=1029721882]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(192, 384)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("7_fb4")
+centered = false
+
+[node name="Floor_3_7" type="Sprite2D" parent="FloorLayer" unique_id=1480927868]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(192, 448)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("4_fb1")
+centered = false
+
+[node name="Floor_4_0" type="Sprite2D" parent="FloorLayer" unique_id=940625073]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(256, 0)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("4_fb1")
+centered = false
+
+[node name="Floor_4_1" type="Sprite2D" parent="FloorLayer" unique_id=314428506]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(256, 64)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("5_fb2")
+centered = false
+
+[node name="Floor_4_2" type="Sprite2D" parent="FloorLayer" unique_id=67235418]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(256, 128)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("6_fb3")
+centered = false
+
+[node name="Floor_4_3" type="Sprite2D" parent="FloorLayer" unique_id=677982617]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(256, 192)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("7_fb4")
+centered = false
+
+[node name="Floor_4_4" type="Sprite2D" parent="FloorLayer" unique_id=385345608]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(256, 256)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("4_fb1")
+centered = false
+
+[node name="Floor_4_5" type="Sprite2D" parent="FloorLayer" unique_id=716981775]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(256, 320)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("5_fb2")
+centered = false
+
+[node name="Floor_4_6" type="Sprite2D" parent="FloorLayer" unique_id=1763344852]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(256, 384)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("6_fb3")
+centered = false
+
+[node name="Floor_4_7" type="Sprite2D" parent="FloorLayer" unique_id=1178896329]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(256, 448)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("7_fb4")
+centered = false
+
+[node name="Floor_5_0" type="Sprite2D" parent="FloorLayer" unique_id=947513186]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(320, 0)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("7_fb4")
+centered = false
+
+[node name="Floor_5_1" type="Sprite2D" parent="FloorLayer" unique_id=374121696]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(320, 64)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("4_fb1")
+centered = false
+
+[node name="Floor_5_2" type="Sprite2D" parent="FloorLayer" unique_id=704477174]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(320, 128)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("5_fb2")
+centered = false
+
+[node name="Floor_5_3" type="Sprite2D" parent="FloorLayer" unique_id=1370456598]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(320, 192)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("6_fb3")
+centered = false
+
+[node name="Floor_5_4" type="Sprite2D" parent="FloorLayer" unique_id=257834101]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(320, 256)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("7_fb4")
+centered = false
+
+[node name="Floor_5_5" type="Sprite2D" parent="FloorLayer" unique_id=610819492]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(320, 320)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("4_fb1")
+centered = false
+
+[node name="Floor_5_6" type="Sprite2D" parent="FloorLayer" unique_id=562075519]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(320, 384)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("5_fb2")
+centered = false
+
+[node name="Floor_5_7" type="Sprite2D" parent="FloorLayer" unique_id=278859260]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(320, 448)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("6_fb3")
+centered = false
+
+[node name="Floor_6_0" type="Sprite2D" parent="FloorLayer" unique_id=1643416935]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(384, 0)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("6_fb3")
+centered = false
+
+[node name="Floor_6_1" type="Sprite2D" parent="FloorLayer" unique_id=1785933921]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(384, 64)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("7_fb4")
+centered = false
+
+[node name="Floor_6_2" type="Sprite2D" parent="FloorLayer" unique_id=1697937459]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(384, 128)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("4_fb1")
+centered = false
+
+[node name="Floor_6_3" type="Sprite2D" parent="FloorLayer" unique_id=2023700478]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(384, 192)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("5_fb2")
+centered = false
+
+[node name="Floor_6_4" type="Sprite2D" parent="FloorLayer" unique_id=763446830]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(384, 256)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("6_fb3")
+centered = false
+
+[node name="Floor_6_5" type="Sprite2D" parent="FloorLayer" unique_id=1453793785]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(384, 320)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("7_fb4")
+centered = false
+
+[node name="Floor_6_6" type="Sprite2D" parent="FloorLayer" unique_id=1766624425]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(384, 384)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("4_fb1")
+centered = false
+
+[node name="Floor_6_7" type="Sprite2D" parent="FloorLayer" unique_id=853562635]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(384, 448)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("5_fb2")
+centered = false
+
+[node name="Floor_7_0" type="Sprite2D" parent="FloorLayer" unique_id=1668956420]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(448, 0)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("5_fb2")
+centered = false
+
+[node name="Floor_7_1" type="Sprite2D" parent="FloorLayer" unique_id=546047923]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(448, 64)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("6_fb3")
+centered = false
+
+[node name="Floor_7_2" type="Sprite2D" parent="FloorLayer" unique_id=1940866373]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(448, 128)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("7_fb4")
+centered = false
+
+[node name="Floor_7_3" type="Sprite2D" parent="FloorLayer" unique_id=484100684]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(448, 192)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("4_fb1")
+centered = false
+
+[node name="Floor_7_4" type="Sprite2D" parent="FloorLayer" unique_id=1877978221]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(448, 256)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("5_fb2")
+centered = false
+
+[node name="Floor_7_5" type="Sprite2D" parent="FloorLayer" unique_id=131166239]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(448, 320)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("6_fb3")
+centered = false
+
+[node name="Floor_7_6" type="Sprite2D" parent="FloorLayer" unique_id=445314302]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(448, 384)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("7_fb4")
+centered = false
+
+[node name="Floor_7_7" type="Sprite2D" parent="FloorLayer" unique_id=1609727228]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(448, 448)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("4_fb1")
+centered = false
+
+[node name="Floor_8_0" type="Sprite2D" parent="FloorLayer" unique_id=199149565]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(512, 0)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("4_fb1")
+centered = false
+
+[node name="Floor_8_1" type="Sprite2D" parent="FloorLayer" unique_id=218646078]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(512, 64)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("5_fb2")
+centered = false
+
+[node name="Floor_8_2" type="Sprite2D" parent="FloorLayer" unique_id=199777449]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(512, 128)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("6_fb3")
+centered = false
+
+[node name="Floor_8_3" type="Sprite2D" parent="FloorLayer" unique_id=1246873081]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(512, 192)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("7_fb4")
+centered = false
+
+[node name="Floor_8_4" type="Sprite2D" parent="FloorLayer" unique_id=1669283619]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(512, 256)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("4_fb1")
+centered = false
+
+[node name="Floor_8_5" type="Sprite2D" parent="FloorLayer" unique_id=817387356]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(512, 320)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("5_fb2")
+centered = false
+
+[node name="Floor_8_6" type="Sprite2D" parent="FloorLayer" unique_id=1720568162]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(512, 384)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("6_fb3")
+centered = false
+
+[node name="Floor_8_7" type="Sprite2D" parent="FloorLayer" unique_id=1707245621]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(512, 448)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("7_fb4")
+centered = false
+
+[node name="Floor_9_0" type="Sprite2D" parent="FloorLayer" unique_id=871110980]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(576, 0)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("7_fb4")
+centered = false
+
+[node name="Floor_9_1" type="Sprite2D" parent="FloorLayer" unique_id=2005710929]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(576, 64)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("4_fb1")
+centered = false
+
+[node name="Floor_9_2" type="Sprite2D" parent="FloorLayer" unique_id=670733730]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(576, 128)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("5_fb2")
+centered = false
+
+[node name="Floor_9_3" type="Sprite2D" parent="FloorLayer" unique_id=549104505]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(576, 192)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("6_fb3")
+centered = false
+
+[node name="Floor_9_4" type="Sprite2D" parent="FloorLayer" unique_id=681042375]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(576, 256)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("7_fb4")
+centered = false
+
+[node name="Floor_9_5" type="Sprite2D" parent="FloorLayer" unique_id=1679193871]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(576, 320)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("4_fb1")
+centered = false
+
+[node name="Floor_9_6" type="Sprite2D" parent="FloorLayer" unique_id=1406174898]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(576, 384)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("5_fb2")
+centered = false
+
+[node name="Floor_9_7" type="Sprite2D" parent="FloorLayer" unique_id=539265377]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(576, 448)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("6_fb3")
+centered = false
+
+[node name="Floor_10_0" type="Sprite2D" parent="FloorLayer" unique_id=1785840524]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(640, 0)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("6_fb3")
+centered = false
+
+[node name="Floor_10_1" type="Sprite2D" parent="FloorLayer" unique_id=2005220745]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(640, 64)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("7_fb4")
+centered = false
+
+[node name="Floor_10_2" type="Sprite2D" parent="FloorLayer" unique_id=1196402182]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(640, 128)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("4_fb1")
+centered = false
+
+[node name="Floor_10_3" type="Sprite2D" parent="FloorLayer" unique_id=99600088]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(640, 192)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("5_fb2")
+centered = false
+
+[node name="Floor_10_4" type="Sprite2D" parent="FloorLayer" unique_id=1147897566]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(640, 256)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("6_fb3")
+centered = false
+
+[node name="Floor_10_5" type="Sprite2D" parent="FloorLayer" unique_id=2124421936]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(640, 320)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("7_fb4")
+centered = false
+
+[node name="Floor_10_6" type="Sprite2D" parent="FloorLayer" unique_id=2114240723]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(640, 384)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("4_fb1")
+centered = false
+
+[node name="Floor_10_7" type="Sprite2D" parent="FloorLayer" unique_id=788683964]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(640, 448)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("5_fb2")
+centered = false
+
+[node name="Floor_11_0" type="Sprite2D" parent="FloorLayer" unique_id=2079262212]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(704, 0)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("5_fb2")
+centered = false
+
+[node name="Floor_11_1" type="Sprite2D" parent="FloorLayer" unique_id=342044787]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(704, 64)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("6_fb3")
+centered = false
+
+[node name="Floor_11_2" type="Sprite2D" parent="FloorLayer" unique_id=188511426]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(704, 128)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("7_fb4")
+centered = false
+
+[node name="Floor_11_3" type="Sprite2D" parent="FloorLayer" unique_id=365328033]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(704, 192)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("4_fb1")
+centered = false
+
+[node name="Floor_11_4" type="Sprite2D" parent="FloorLayer" unique_id=1274070406]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(704, 256)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("5_fb2")
+centered = false
+
+[node name="Floor_11_5" type="Sprite2D" parent="FloorLayer" unique_id=1482376599]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(704, 320)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("6_fb3")
+centered = false
+
+[node name="Floor_11_6" type="Sprite2D" parent="FloorLayer" unique_id=581449961]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(704, 384)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("7_fb4")
+centered = false
+
+[node name="Floor_11_7" type="Sprite2D" parent="FloorLayer" unique_id=1858775051]
+modulate = Color(0.6901961, 0.6627451, 0.627451, 1)
+position = Vector2(704, 448)
+scale = Vector2(0.1177, 0.1196)
+texture = ExtResource("4_fb1")
+centered = false
+
+[node name="BuildingLayer" type="Node2D" parent="." unique_id=1496279907]
+
+[node name="DecorationLayer" type="Node2D" parent="." unique_id=1013725010]
+
+[node name="Deco_0" type="Sprite2D" parent="DecorationLayer" unique_id=2022888507]
+modulate = Color(1, 1, 1, 0.78431374)
+position = Vector2(144, 482.00003)
+scale = Vector2(0.3, 0.3)
+texture = ExtResource("8_d1")
+
+[node name="Deco_1" type="Sprite2D" parent="DecorationLayer" unique_id=567030748]
+modulate = Color(1, 1, 1, 0.78431374)
+position = Vector2(488, 34)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("9_d2")
+
+[node name="Deco_3" type="Sprite2D" parent="DecorationLayer" unique_id=567066622]
+position = Vector2(290, 389)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("11_d4")
+
+[node name="Deco_4" type="Sprite2D" parent="DecorationLayer" unique_id=1896402886]
+modulate = Color(1, 1, 1, 0.627451)
+position = Vector2(697, 59)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("12_d5")
+
+[node name="Deco_5" type="Sprite2D" parent="DecorationLayer" unique_id=1047851260]
+modulate = Color(1, 1, 1, 0.627451)
+position = Vector2(580, 142)
+scale = Vector2(0.3, 0.3)
+texture = ExtResource("13_d6")
+
+[node name="Deco_6" type="Sprite2D" parent="DecorationLayer" unique_id=925457675]
+modulate = Color(1, 1, 1, 0.627451)
+position = Vector2(285, 129)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("14_d7")
+
+[node name="Deco_7" type="Sprite2D" parent="DecorationLayer" unique_id=246582359]
+position = Vector2(636, 196)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("15_d8")
+
+[node name="GridOverlay" type="Node2D" parent="." unique_id=992195375]
+script = ExtResource("2_grid")
+
+[node name="ItemLayer" type="Node2D" parent="." unique_id=1407347514]
+script = ExtResource("3_item")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=849516105]
+position = Vector2(384, 256)
+
+[node name="UI" type="CanvasLayer" parent="." unique_id=410368584]
+
+[node name="ScoreLabel" type="Label" parent="UI" unique_id=744699005]
+offset_left = 8.0
+offset_top = 4.0
+offset_right = 400.0
+offset_bottom = 24.0
+text = "得分: 0   物品数: 0"
+
+[node name="HintLabel" type="Label" parent="UI" unique_id=565435607]
+offset_left = 8.0
+offset_top = 24.0
+offset_right = 400.0
+offset_bottom = 42.0
+text = "左键: 放置/旋转传送带   右键: 清除"
+
+[node name="TickTimer" type="Timer" parent="." unique_id=1996499133]
+wait_time = 0.5
+autostart = true
