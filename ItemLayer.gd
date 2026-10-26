@@ -13,6 +13,7 @@ var sink_pos: Vector2i = Vector2i(-1, -1)
 
 # items 数组由 Main.gd 注入（共享引用），元素: { pos, prev_pos, progress }
 var items: Array = []
+var position_sampler: Callable
 
 func _draw() -> void:
 	# 货物按高度对齐到 CELL 的一定比例，保持原图瘦长比例
@@ -31,5 +32,9 @@ func _draw() -> void:
 		var iy: float = lerp(prev.y, cur.y, t)
 		var px: float = (ix + 0.5) * CELL
 		var py: float = (iy + 0.5) * CELL
+		if position_sampler.is_valid():
+			var sampled: Vector2 = position_sampler.call(item)
+			px = sampled.x
+			py = sampled.y
 		# 居中绘制
 		draw_texture_rect(_SOURCE_TEX, Rect2(px - dw / 2.0, py - dh / 2.0, dw, dh), false)

@@ -14,6 +14,8 @@
 [ext_resource type="Texture2D" uid="uid://b8decopatch23" path="res://assets/FloorDecorations/patch_2_3.tres" id="13_d6"]
 [ext_resource type="Texture2D" uid="uid://b8decopatch31" path="res://assets/FloorDecorations/patch_3_1.tres" id="14_d7"]
 [ext_resource type="Texture2D" uid="uid://b8decopatch32" path="res://assets/FloorDecorations/patch_3_2.tres" id="15_d8"]
+[ext_resource type="PackedScene" uid="uid://c7o0mejsbdvun" path="res://Worker.tscn" id="16_worker"]
+[ext_resource type="Texture2D" uid="uid://btwe2p2kiptu" path="res://assets/Box.png" id="17_box"]
 
 [node name="Main" type="Node2D" unique_id=1685539245]
 script = ExtResource("1_main")
@@ -746,6 +748,17 @@ script = ExtResource("2_grid")
 [node name="ItemLayer" type="Node2D" parent="." unique_id=1407347514]
 script = ExtResource("3_item")
 
+[node name="Box" type="Sprite2D" parent="." unique_id=1627034073]
+z_index = 4
+texture_filter = 4
+position = Vector2(544, 224)
+scale = Vector2(0.15, 0.15)
+texture = ExtResource("17_box")
+offset = Vector2(0, -104)
+
+[node name="Worker" parent="." unique_id=1741121801 instance=ExtResource("16_worker")]
+position = Vector2(352, 224)
+
 [node name="Camera2D" type="Camera2D" parent="." unique_id=849516105]
 position = Vector2(384, 256)
 
@@ -763,7 +776,7 @@ offset_left = 8.0
 offset_top = 24.0
 offset_right = 400.0
 offset_bottom = 42.0
-text = "左键: 放置/旋转传送带   右键: 清除"
+text = "左键点击: 移动/拾取箱子   左键拖拽: 铺设传送带   右键: 清除"
 
 [node name="TickTimer" type="Timer" parent="." unique_id=1996499133]
 wait_time = 0.5

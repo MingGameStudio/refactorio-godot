@@ -21,8 +21,14 @@ enum Dir { UP, DOWN, LEFT, RIGHT }
 var hover_cell: Vector2i = Vector2i(-1, -1)
 # 拖拽预览路径：元素为 {pos: Vector2i, dir: int}，空数组表示无预览
 var preview_path: Array = []
+var occupancy: RefCounted
+@export var show_occupancy: bool = true
+const C_OCCUPIED := Color(1.0, 0.0, 0.0, 0.2)
 
 func _draw() -> void:
+	if show_occupancy and occupancy != null:
+		for cell in occupancy.get_occupied_cells():
+			draw_rect(Rect2(Vector2(cell) * CELL, Vector2.ONE * CELL), C_OCCUPIED)
 	# 网格线
 	for x in range(COLS + 1):
 		var col := C_GRID if x % 4 != 0 else C_GRID_HI

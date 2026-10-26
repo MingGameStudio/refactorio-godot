@@ -29,6 +29,8 @@ const SOURCE_POS := Vector2i(1, 4)
 const SINK_POS   := Vector2i(10, 4)
 
 # --- 场景节点引用（@onready 在 _ready 之前由引擎赋值） ---
+@onready var _worker: Node2D = $Worker
+@onready var _box: Sprite2D = $Box
 @onready var _floor_layer: Node2D = $FloorLayer
 @onready var _building_layer: Node2D = $BuildingLayer
 @onready var _deco_layer: Node2D = $DecorationLayer
@@ -45,6 +47,9 @@ const _BELT_SRC_SIZE: Vector2 = Vector2(451, 289)  # Belt.png 原始宽高
 const _BELT_LEFT_END_TEX:   Texture2D = preload("res://assets/TransportBelt/TransportLeftEnd.png")
 const _BELT_MIDDLE_TEX:    Texture2D = preload("res://assets/TransportBelt/TransportHorizontal.png")
 const _BELT_RIGHT_END_TEX: Texture2D = preload("res://assets/TransportBelt/TransportRightEnd.png")
+# --- 转弯圆环（BeltRing.png，箭头沿顺时针排列） ---
+const _BELT_RING_TEX: Texture2D = preload("res://assets/TransportBelt/BeltRing.png")
+const _BELT_CORNER_FRAME_TEX: Texture2D = preload("res://assets/TransportBelt/TransportCorner.png")
 # 端盖纹理源尺寸（保持各图自身比例缩放）
 const _LEFT_END_SRC_SIZE:   Vector2 = Vector2(449, 343)
 const _MIDDLE_SRC_SIZE:     Vector2 = Vector2(425, 333)
@@ -57,10 +62,15 @@ const _END_MACHINE_SRC_SIZE:   Vector2 = Vector2(707, 895)
 # --- 传送带滚动 Shader（所有 belt Sprite 共享同一 material，offset 全局累加） ---
 const _BELT_SHADER: Shader = preload("res://belt_scroll.gdshader")
 var _belt_material: ShaderMaterial
-
+# --- 转弯圆环 Shader（完整圆环旋转做流动 + 1/4 遮罩形成弯道） ---
+const _RING_SHADER: Shader = preload("res://belt_ring.gdshader")
 # --- 网格数据 ---
 # buildings[x][y] = { type, dir?, node? }  node 为 BuildingLayer 下的可视节点
 var buildings: Array = []
+const GridOccupancyData = preload("res://GridOccupancy.gd")
+var occupancy = GridOccupancyData.new(Vector2i(COLS, ROWS), CELL)
+var navigation := AStarGrid2D.new()
+const GridDepth = preload("res://GridDepth.gd")
 # 每个物品: { pos: Vector2i, prev_pos: Vector2i, progress: float(0..1) }
 var items: Array = []
 
@@ -70,6 +80,9 @@ var score: int = 0
 # --- 拖拽铺设状态 ---
 # _drag_active=true 期间持续根据鼠标位置更新预览路径
 var _drag_active: bool = false
+var _press_world := Vector2.ZERO
+var _pointer_dragged: bool = false
+var _drag_can_build: bool = false
 var _drag_start: Vector2i = Vector2i(-1, -1)  # 按下时的格子
 var _drag_path: Array = []  # 当前预览路径：元素为 {pos, dir}
 
@@ -84,6 +97,7 @@ func _ready() -> void:
 	# 会导致装饰纹理盖住传送带。把 BuildingLayer 移到 DecorationLayer 之后，
 	# 使顺序变为 Floor -> Decoration -> Building -> GridOverlay -> ItemLayer。
 	_ensure_layer_order()
+	_box.z_index = GridDepth.at_position(to_local(_box.global_position), GridDepth.BOX)
 
 	# 创建共享的传送带滚动材质（所有 belt Sprite 复用同一实例）
 	_belt_material = ShaderMaterial.new()
@@ -93,12 +107,24 @@ func _ready() -> void:
 	_belt_material.set_shader_parameter("scroll_speed", 0.6)
 
 	# 初始化逻辑网格 + 初始建筑（装饰位置由用户在编辑器中布置，运行时不改动）
+	_grid_overlay.occupancy = occupancy
+	occupancy.changed.connect(_grid_overlay.queue_redraw)
+	navigation.region = Rect2i(0, 0, COLS, ROWS)
+	navigation.cell_size = Vector2.ONE * CELL
+	navigation.offset = Vector2.ONE * CELL * 0.5
+	navigation.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_NEVER
+	navigation.default_compute_heuristic = AStarGrid2D.HEURISTIC_MANHATTAN
+	navigation.default_estimate_heuristic = AStarGrid2D.HEURISTIC_MANHATTAN
+	navigation.update()
+	_worker.pathfinder = _find_worker_path
+	occupancy.changed.connect(_sync_navigation)
 	_init_grid()
 
 	# 把 ItemLayer 的 items 共享引用交给它
 	_item_layer.items = items
 	# 注入终点位置，让物品到达终点时不再绘制（消失在机器里）
 	_item_layer.sink_pos = SINK_POS
+	_item_layer.position_sampler = _item_draw_position
 
 	# Timer 已是场景节点，连接信号
 	_tick_timer.timeout.connect(_on_tick)
@@ -146,11 +172,60 @@ func _init_grid() -> void:
 			node.owner = self
 			buildings[x][y]["node"] = node
 
-	# 装饰位置由用户在场景编辑器中手动布置，运行时不再改动
+	_refresh_occupancy()
+
+# 只读取逻辑建筑，避免 queue_free 尚未释放的旧节点重复注册。
+# 机器和传送带统一只占放置位置的一格，与图形覆盖范围无关。
+func _refresh_occupancy() -> void:
+	var footprints: Array = []
+	for x in COLS:
+		for y in ROWS:
+			var b: Dictionary = buildings[x][y]
+			if b.type == Building.EMPTY:
+				continue
+			var anchor := Vector2i(x, y)
+			var rect := Rect2(Vector2(anchor) * CELL, Vector2.ONE * CELL)
+			footprints.append({"anchor": anchor, "type": b.type, "rect": rect})
+	occupancy.rebuild(footprints)
+
+func is_cell_walkable(cell: Vector2i) -> bool:
+	return occupancy.is_walkable(cell)
+
+func _sync_navigation() -> void:
+	# update() 会清除 solid 状态；这里只更新占用，不重建网格配置。
+	for x in COLS:
+		for y in ROWS:
+			var cell := Vector2i(x, y)
+			navigation.set_point_solid(cell, occupancy.is_blocked(cell))
+	_worker.repath()
+
+func _find_worker_path(from_world: Vector2, to_world: Vector2) -> PackedVector2Array:
+	var start := world_to_cell(from_world)
+	var finish := world_to_cell(to_world)
+	if not occupancy.is_walkable(start) or not occupancy.is_walkable(finish):
+		return PackedVector2Array()
+	var points := navigation.get_point_path(start, finish)
+	if points.is_empty():
+		return points
+	# 先回到当前格中心，防止途中改目标时斜切障碍角落。
+	for i in points.size():
+		points[i] = to_global(points[i])
+	if start == finish:
+		return PackedVector2Array([to_world])
+	# 已经位于下一段的水平/垂直线上时可直接前进，避免先退回格心。
+	var local_start := to_local(from_world)
+	var local_next := to_local(points[1])
+	if is_equal_approx(local_start.x, local_next.x) or is_equal_approx(local_start.y, local_next.y):
+		points.remove_at(0)
+	if not points[-1].is_equal_approx(to_world):
+		points.append(to_world)
+	return points
 
 # 在 (x,y) 设置建筑并同步创建/更新 BuildingLayer 下的可视节点
 # 同时刷新左右邻居 belt 的端盖（运行时单格改动后让端盖重新对齐）
 func _set_building(pos: Vector2i, type: int, dir: int = Dir.RIGHT) -> void:
+	if not _in_bounds(pos):
+		return
 	var old: Dictionary = buildings[pos.x][pos.y]
 	# 移除旧节点
 	if old.has("node") and old["node"] != null:
@@ -174,6 +249,7 @@ func _set_building(pos: Vector2i, type: int, dir: int = Dir.RIGHT) -> void:
 		_rebuild_belt_at(pos + Vector2i(0, -1))
 		_rebuild_belt_at(pos + Vector2i(0, 1))
 		_rebuild_belt_at(pos)
+	_refresh_occupancy()
 
 # 重新创建某格子上的 belt 可视节点（仅在是 BELT 时）
 func _rebuild_belt_at(pos: Vector2i) -> void:
@@ -197,11 +273,16 @@ func _make_building_node(pos: Vector2i, type: int, dir: int) -> CanvasItem:
 	var rect := Rect2(pos.x * CELL, pos.y * CELL, CELL, CELL)
 	match type:
 		Building.BELT:
-			# 使用 Belt.png 纹理，按方向旋转，保持原始宽高比
-			# 图本身是水平方向（朝右），RIGHT 时不旋转；其他方向按顺时针旋转
 			var n := Node2D.new()
 			n.position = Vector2(pos.x * CELL, pos.y * CELL)
 			n.name = "Belt_%d_%d" % [pos.x, pos.y]
+			# --- 转弯格：固定四分之一遮罩，内部纹理流动 ---
+			var cinfo: Dictionary = _corner_info(pos)
+			if cinfo["is_corner"]:
+				n.add_child(_make_corner_ring(cinfo["in_dir"], cinfo["out_dir"]))
+				return n
+			# --- 直行格：Belt.png 底图 + 端盖/中段结构件 ---
+			# 图本身是水平方向（朝右），RIGHT 时不旋转；其他方向按顺时针旋转
 			var sprite := Sprite2D.new()
 			sprite.texture = _BELT_TEX
 			sprite.centered = true
@@ -244,6 +325,7 @@ func _make_building_node(pos: Vector2i, type: int, dir: int) -> CanvasItem:
 			return n
 		Building.SOURCE:
 				var n := Node2D.new()
+				n.z_index = GridDepth.at_row(pos.y)
 				n.position = Vector2(pos.x * CELL, pos.y * CELL)
 				n.name = "Source_%d_%d" % [pos.x, pos.y]
 				var sprite := Sprite2D.new()
@@ -258,6 +340,7 @@ func _make_building_node(pos: Vector2i, type: int, dir: int) -> CanvasItem:
 				return n
 		Building.SINK:
 				var n := Node2D.new()
+				n.z_index = GridDepth.at_row(pos.y)
 				n.position = Vector2(pos.x * CELL, pos.y * CELL)
 				n.name = "Sink_%d_%d" % [pos.x, pos.y]
 				var sprite := Sprite2D.new()
@@ -314,14 +397,128 @@ func _overlay_src_size(tex: Texture2D) -> Vector2:
 		return _RIGHT_END_SRC_SIZE
 	return _MIDDLE_SRC_SIZE
 
+# ============================================================
+# 转弯判定与圆环
+# ============================================================
+
+# 求方向的反向（180°）
+# 注意 enum Dir { UP, DOWN, LEFT, RIGHT } 是两两相邻排列，
+# 不能用 (d + 2) % 4，必须查表。
+func _opposite_dir(dir: int) -> int:
+	match dir:
+		Dir.UP:    return Dir.DOWN
+		Dir.DOWN:  return Dir.UP
+		Dir.LEFT:  return Dir.RIGHT
+		Dir.RIGHT: return Dir.LEFT
+	return dir
+
+# 判断 pos 处的 belt 是否为转弯格
+# 返回 {is_corner: bool, in_dir: int, out_dir: int}
+# in_dir  = 上游格所在方位（物品从这边进来）
+# out_dir = 物品离开该格的方向（即该格 dir）
+func _corner_info(pos: Vector2i) -> Dictionary:
+	var res := { "is_corner": false, "in_dir": -1, "out_dir": -1 }
+	if pos.x < 0 or pos.x >= COLS or pos.y < 0 or pos.y >= ROWS:
+		return res
+	var b: Dictionary = buildings[pos.x][pos.y]
+	if b.type != Building.BELT:
+		return res
+	var out_dir: int = b.dir
+	# 找出真正的上游格：四邻中「dir 指向本格」的 BELT
+	# 不能用 pos - dir_offset(out_dir)，因为拐角格的 dir 已转向下游，
+	# 上游格在侧面（如 RIGHT->DOWN 拐角，上游在左边）。
+	var in_dir: int = -1
+	for d in [_opposite_dir(out_dir), Dir.UP, Dir.DOWN, Dir.LEFT, Dir.RIGHT]:
+		var nb_pos: Vector2i = pos + _dir_offset(d)
+		if not _in_bounds(nb_pos):
+			continue
+		var nb: Dictionary = buildings[nb_pos.x][nb_pos.y]
+		if d != out_dir and ((nb.type == Building.BELT and nb.dir == _opposite_dir(d)) or (nb.type == Building.SOURCE and d == Dir.LEFT)):
+			in_dir = d  # 上游格所在方位
+			break
+	if in_dir < 0:
+		# 没有上游（链头），不是转弯
+		return res
+	res["in_dir"] = in_dir
+	res["out_dir"] = out_dir
+	# 直行：上游方位与出射方向相反（物品沿同一方向穿过本格）
+	# 转弯：两者垂直（方向发生 90° 转折）
+	res["is_corner"] = _dir_to_vector(in_dir).dot(_dir_to_vector(out_dir)) == 0
+	return res
+
+# 圆心位于入口边和出口边共有的格子角点；中心线半径为半格。
+# 遮罩朝向格子内部，角度必须相对于圆心计算，而不是直接使用入口方向。
+func _make_corner_ring(in_dir: int, out_dir: int) -> Node2D:
+	var ring := Node2D.new()
+	ring.name = "CornerRing"
+	var incoming := _dir_to_vector(in_dir)
+	var outgoing := _dir_to_vector(out_dir)
+	var sprite := Sprite2D.new()
+	sprite.name = "RingSprite"
+	sprite.texture = _BELT_RING_TEX
+	sprite.position = Vector2.ONE * CELL * 0.5 + (incoming + outgoing) * CELL * 0.5
+	sprite.scale = Vector2.ONE * (2.0 * CELL / _BELT_RING_TEX.get_width())
+	var mat := ShaderMaterial.new()
+	mat.shader = _RING_SHADER
+	mat.set_shader_parameter("mask_direction", -(incoming + outgoing))
+	# 屏幕 Y 向下：入口速度与出口速度的叉积为正时顺时针。
+	mat.set_shader_parameter("turn_sign", (-incoming).cross(outgoing))
+	mat.set_shader_parameter("belt_width", _BELT_SRC_SIZE.y / _BELT_SRC_SIZE.x * 0.5)
+	sprite.material = mat
+	ring.add_child(sprite)
+	# 原图的两个接口朝右、朝下；框架独立于带面材质，保持静止。
+	var frame := Sprite2D.new()
+	frame.name = "CornerFrame"
+	frame.texture = _BELT_CORNER_FRAME_TEX
+	# 朝圆心（弯道内侧）微移，缩小外框以改善与直线框架的衔接。
+	frame.position = Vector2.ONE * CELL * 0.5 + (incoming + outgoing).normalized() * 2.0
+	frame.scale = Vector2.ONE * (float(CELL) * 0.95 / _BELT_CORNER_FRAME_TEX.get_width())
+	frame.rotation = Vector2.ONE.angle_to(incoming + outgoing)
+	ring.add_child(frame)
+	return ring
+
+# 货物的逻辑仍按格子推进；显示位置沿入口到出口的圆弧插值。
+func _belt_path_position(pos: Vector2i, progress: float) -> Vector2:
+	var center := (Vector2(pos) + Vector2.ONE * 0.5) * CELL
+	var info := _corner_info(pos)
+	if info.is_corner:
+		var incoming := _dir_to_vector(info.in_dir)
+		var outgoing := _dir_to_vector(info.out_dir)
+		var pivot := center + (incoming + outgoing) * CELL * 0.5
+		var radius := -outgoing * CELL * 0.5
+		var turn := (-incoming).cross(outgoing)
+		return pivot + radius.rotated(turn * PI * 0.5 * progress)
+	if _in_bounds(pos) and buildings[pos.x][pos.y].type == Building.BELT:
+		return center + _dir_to_vector(buildings[pos.x][pos.y].dir) * CELL * (progress - 0.5)
+	return center
+
+func _item_draw_position(item: Dictionary) -> Vector2:
+	var previous: Vector2i = item.prev_pos
+	var current: Vector2i = item.pos
+	var t: float = item.progress
+	if previous == current:
+		return _belt_path_position(current, 0.5)
+	# 两段在共同边界中点衔接，也支持连续弯道。
+	var boundary := (Vector2(previous + current) * 0.5 + Vector2.ONE * 0.5) * CELL
+	if t < 0.5:
+		if _corner_info(previous).is_corner:
+			return _belt_path_position(previous, 0.5 + t)
+		return _belt_path_position(previous, 0.5).lerp(boundary, t * 2.0)
+	if _corner_info(current).is_corner:
+		return _belt_path_position(current, t - 0.5)
+	return boundary.lerp(_belt_path_position(current, 0.5), (t - 0.5) * 2.0)
+
 # 清除建筑（变为 EMPTY），移除节点
 # 清除 belt 时刷新左右邻居的端盖
 func _clear_building(pos: Vector2i) -> void:
+	if not _in_bounds(pos):
+		return
 	var old: Dictionary = buildings[pos.x][pos.y]
 	if old.has("node") and old["node"] != null:
 		var old_node: Node = old["node"]
 		old_node.queue_free()
 	buildings[pos.x][pos.y] = { "type": Building.EMPTY }
+	_refresh_occupancy()
 	if old.type == Building.BELT:
 		# 刷新四向邻居的端盖
 		_rebuild_belt_at(pos + Vector2i(-1, 0))
@@ -332,10 +529,13 @@ func _clear_building(pos: Vector2i) -> void:
 # 旋转已有传送带方向（更新数据 + 重建节点）
 # 旋转后端盖类型可能改变（水平↔垂直），需重建该格及四向邻居
 func _rotate_belt(pos: Vector2i) -> void:
+	if not _in_bounds(pos):
+		return
 	var b: Dictionary = buildings[pos.x][pos.y]
 	if b.type != Building.BELT:
 		return
 	b.dir = _next_dir(b.dir)
+	# 旋转不改变传送带的单格占用，无需重新发布占用表。
 	# 重建自身 + 四向邻居（端盖可能因方向变化而切换）
 	_rebuild_belt_at(pos)
 	_rebuild_belt_at(pos + Vector2i(-1, 0))
@@ -376,6 +576,7 @@ func _process(delta: float) -> void:
 # ============================================================
 
 func world_to_cell(world_pos: Vector2) -> Vector2i:
+	world_pos = to_local(world_pos)
 	# 必须用浮点除法后再取整，不能用 int 整除（会提前截断导致偏移）
 	var x: int = int(floor(world_pos.x / float(CELL)))
 	var y: int = int(floor(world_pos.y / float(CELL)))
@@ -400,7 +601,7 @@ func _dir_offset(dir: int) -> Vector2i:
 	return Vector2i.ZERO
 
 func _next_dir(dir: int) -> int:
-	return (dir + 1) % 4
+	return {Dir.RIGHT: Dir.DOWN, Dir.DOWN: Dir.LEFT, Dir.LEFT: Dir.UP, Dir.UP: Dir.RIGHT}[dir]
 
 # ============================================================
 # L 形路径计算（水平优先：先水平再垂直）
@@ -504,15 +705,13 @@ func _input(event: InputEvent) -> void:
 		var b: Dictionary = buildings[cell.x][cell.y]
 
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			# 源头/终点不可放置
-			if b.type == Building.SOURCE or b.type == Building.SINK:
-				return
-			# 点击已有 belt：进入拖拽（允许从已有 belt 上开始铺设）
-			# 空格或已有 belt 都作为拖拽起点
+			_press_world = get_global_mouse_position()
+			_pointer_dragged = false
+			_drag_can_build = b.type != Building.SOURCE and b.type != Building.SINK and not _box_contains(_press_world)
 			_drag_active = true
 			_drag_start = cell
-			_drag_path = _compute_l_path(cell, cell, get_global_mouse_position())
-			_grid_overlay.preview_path = _drag_path
+			_drag_path = []
+			_grid_overlay.preview_path = _drag_path if _drag_path.size() > 1 else []
 			_grid_overlay.queue_redraw()
 
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
@@ -526,34 +725,50 @@ func _input(event: InputEvent) -> void:
 
 	elif event is InputEventMouseButton and not event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT and _drag_active:
-			# 松开：若路径只有单格（未拖拽），且该格是 belt，则旋转
-			if _drag_path.size() == 1:
-				var p: Vector2i = _drag_path[0]["pos"]
-				if _in_bounds(p) and buildings[p.x][p.y].type == Building.BELT:
-					_rotate_belt(p)
-				else:
-					_place_belt_path(_drag_path)
-			else:
-				_place_belt_path(_drag_path)
-			_drag_active = false
-			_drag_start = Vector2i(-1, -1)
-			_drag_path = []
-			_grid_overlay.preview_path = []
-			_grid_overlay.queue_redraw()
+			_finish_left_gesture(get_global_mouse_position())
 
 	elif event is InputEventMouseMotion and _drag_active:
-		# 拖拽中：更新预览路径
-		var cur := world_to_cell(get_global_mouse_position())
-		if cur.x < 0:
-			return
-		_drag_path = _compute_l_path(_drag_start, cur, get_global_mouse_position())
-		_grid_overlay.preview_path = _drag_path
-		_grid_overlay.queue_redraw()
+		_update_left_gesture(get_global_mouse_position())
+
+# 一旦发生拖动，回到起点也不再作为点击移动处理。
+func _update_left_gesture(world: Vector2) -> void:
+	var cell := world_to_cell(world)
+	if world.distance_to(_press_world) > 8.0 or cell != _drag_start:
+		_pointer_dragged = true
+	_drag_path = []
+	if _drag_can_build and _in_bounds(cell) and cell != _drag_start:
+		_drag_path = _compute_l_path(_drag_start, cell, world)
+	_grid_overlay.preview_path = _drag_path
+	_grid_overlay.queue_redraw()
+
+func _box_contains(world: Vector2) -> bool:
+	return _box.visible and _box.get_rect().has_point(_box.to_local(world))
+
+func _finish_left_gesture(world: Vector2) -> void:
+	_update_left_gesture(world)
+	if _drag_path.size() > 1:
+		_place_belt_path(_drag_path)
+	elif not _pointer_dragged and _in_bounds(world_to_cell(world)):
+		if _box_contains(world):
+			_worker.request_pickup(_box)
+		else:
+			var cell := world_to_cell(world)
+			if is_cell_walkable(cell):
+				_worker.move_to(to_global((Vector2(cell) + Vector2.ONE * 0.5) * CELL))
+	_drag_active = false
+	_drag_start = Vector2i(-1, -1)
+	_drag_path = []
+	_grid_overlay.preview_path = []
+	_grid_overlay.queue_redraw()
 
 # 批量放置传送带路径（跳过源头/终点，覆盖已有 belt）
 func _place_belt_path(path: Array) -> void:
 	if path.is_empty():
 		return
+	# --- 第一阶段：只写数据，不建节点 ---
+	# 拐角判定依赖上下游的 dir，若边写边建，早建的格子看不到后续数据，
+	# 会把拐角误判成直线。所以先让整条路径的数据齐备。
+	var touched: Array = []
 	for entry in path:
 		var pos: Vector2i = entry["pos"]
 		var dir: int = entry["dir"]
@@ -562,7 +777,21 @@ func _place_belt_path(path: Array) -> void:
 		var b: Dictionary = buildings[pos.x][pos.y]
 		if b.type == Building.SOURCE or b.type == Building.SINK:
 			continue  # 不覆盖源头/终点
-		_set_building(pos, Building.BELT, dir)
+		var old: Dictionary = buildings[pos.x][pos.y]
+		if old.has("node") and old["node"] != null:
+			var old_node: Node = old["node"]
+			old_node.queue_free()
+		buildings[pos.x][pos.y] = { "type": Building.BELT, "dir": dir, "node": null }
+		touched.append(pos)
+
+	_refresh_occupancy()
+	# --- 第二阶段：数据齐备后，刷新受影响区域（路径本身 + 四邻）的可视节点 ---
+	for pos in touched:
+		_rebuild_belt_at(pos)
+		_rebuild_belt_at(pos + Vector2i(-1, 0))
+		_rebuild_belt_at(pos + Vector2i(1, 0))
+		_rebuild_belt_at(pos + Vector2i(0, -1))
+		_rebuild_belt_at(pos + Vector2i(0, 1))
 
 # ============================================================
 # Tick 逻辑
