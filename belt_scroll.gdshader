@@ -10,10 +10,6 @@ uniform float scroll_offset = 0.0;
 // 滚动速度（每秒滚动的纹理循环次数）
 uniform float scroll_speed = 0.6;
 
-void vertex() {
-	// canvas_item 顶点变换通常不需要额外处理
-}
-
 void fragment() {
 	vec2 dir = normalize(scroll_dir);
 	// 让 UV 沿 dir 滚动；offset 随时间增长使内容朝 dir 方向流动

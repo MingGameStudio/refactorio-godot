@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://da30n0kwqflkj"
-path="res://.godot/imported/EndMachine.png-6d438efd1e5523fb90525bf05c88cdaf.ctex"
+uid="uid://btljp6wgv51tb"
+path="res://.godot/imported/StartMachine.png-25863d813f236844c0b4c591fed96e55.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/EndMachine.png"
-dest_files=["res://.godot/imported/EndMachine.png-6d438efd1e5523fb90525bf05c88cdaf.ctex"]
+source_file="res://assets/Machines/StartMachine.png"
+dest_files=["res://.godot/imported/StartMachine.png-25863d813f236844c0b4c591fed96e55.ctex"]
 
 [params]
 

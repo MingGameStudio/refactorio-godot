@@ -7,6 +7,7 @@ const GridDepth = preload("res://GridDepth.gd")
 var target_position: Vector2
 var carrying_box: bool = false
 var _pickup_target: Sprite2D
+var _delivery_target: Node2D
 var pathfinder: Callable
 var _path := PackedVector2Array()
 var _path_index: int = 0
@@ -25,6 +26,7 @@ func move_to(destination: Vector2) -> bool:
 	if route.is_empty():
 		return false
 	_pickup_target = null
+	_delivery_target = null
 	target_position = destination
 	_set_path(route)
 	return true
@@ -50,6 +52,7 @@ func repath() -> void:
 	if route.is_empty():
 		target_position = global_position
 		_pickup_target = null
+		_delivery_target = null
 
 func _face_toward(destination: Vector2) -> void:
 	var horizontal := destination.x - global_position.x
@@ -68,6 +71,16 @@ func request_pickup(box: Sprite2D) -> void:
 			_pickup_target = box
 			return
 
+func request_delivery(machine: Node2D, approach: Vector2) -> bool:
+	if not carrying_box or not move_to(approach):
+		return false
+	_delivery_target = machine
+	return true
+
+func release_box() -> void:
+	carrying_box = false
+	carried_box.hide()
+
 func _physics_process(delta: float) -> void:
 	var remaining := move_speed * delta
 	while _path_index < _path.size():
@@ -82,6 +95,10 @@ func _physics_process(delta: float) -> void:
 		_path_index += 1
 	_update_depth()
 	var arrived := _path_index >= _path.size()
+	if arrived and is_instance_valid(_delivery_target):
+		_face_toward(_delivery_target.input_position())
+		_delivery_target.accept_box(self)
+		_delivery_target = null
 	if arrived and is_instance_valid(_pickup_target):
 		if _pickup_target.visible and global_position.distance_to(_pickup_target.global_position) <= 33.0:
 			_face_toward(_pickup_target.global_position)

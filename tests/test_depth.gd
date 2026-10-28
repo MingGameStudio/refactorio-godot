@@ -28,7 +28,7 @@ func _run() -> void:
 	check(worker.carried_box.z_as_relative and worker.carried_box.z_index == 0, "Carried box inherits worker depth")
 	check(worker.sprite.z_as_relative and worker.sprite.z_index == 0, "All animation frames inherit worker depth")
 	game._set_building(Vector2i(5, 6), game.Building.SOURCE)
-	check(game.buildings[5][6].node.z_index > game.buildings[1][4].node.z_index, "New machines use their placement row")
+	check(game.buildings[5][6].node.z_index > game.buildings[game.SOURCE_POS.x][game.SOURCE_POS.y].node.z_index, "New machines use their placement row")
 	worker.position = Vector2(352, 224)
 	worker.move_to(Vector2(352, 96))
 	var old_depth: int = worker.z_index

@@ -16,7 +16,7 @@ func _run() -> void:
 	game.get_node("TickTimer").stop()
 	game.set_process(false)
 	var data = game.occupancy
-	# 两台机器和八格传送带各占放置位置的一格。
+	# 两台机器、七格输出传送带和机器附属输入带。
 	for x in game.COLS:
 		for y in game.ROWS:
 			var expected: bool = x >= 1 and x <= 10 and y == 4
@@ -41,9 +41,9 @@ func _run() -> void:
 	game._clear_building(Vector2i(4, 2))
 	check(data.is_walkable(Vector2i(4, 2)), "Corner deletion frees only its own cell")
 	check(data.is_blocked(Vector2i(4, 1)), "Neighbour remains occupied")
-	check(data.get_occupants(Vector2i(2, 4)).size() == 1, "Machine graphic does not occupy neighbouring belt cell")
-	game._clear_building(Vector2i(2, 4))
-	check(data.is_walkable(Vector2i(2, 4)), "Removing belt frees cell beside machine")
+	check(data.get_occupants(Vector2i(3, 4)).size() == 1, "Machine graphic does not occupy neighbouring belt cell")
+	game._clear_building(Vector2i(3, 4))
+	check(data.is_walkable(Vector2i(3, 4)), "Removing belt frees cell beside machine")
 	check(data.is_blocked(game.SOURCE_POS), "Neighbour deletion preserves machine cell")
 	game._clear_building(game.SOURCE_POS)
 	check(data.is_walkable(game.SOURCE_POS), "Removing machine frees its placement cell")

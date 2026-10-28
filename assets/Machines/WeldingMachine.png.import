@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://btljp6wgv51tb"
-path="res://.godot/imported/StartMachine.png-4590625ea3fd2bfa6e831ec2a84ed5a1.ctex"
+uid="uid://c8c0qo1kkklgb"
+path="res://.godot/imported/WeldingMachine.png-4bbd2a1cc684107614b118c2bf2ec999.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/StartMachine.png"
-dest_files=["res://.godot/imported/StartMachine.png-4590625ea3fd2bfa6e831ec2a84ed5a1.ctex"]
+source_file="res://assets/Machines/WeldingMachine.png"
+dest_files=["res://.godot/imported/WeldingMachine.png-4bbd2a1cc684107614b118c2bf2ec999.ctex"]
 
 [params]
 

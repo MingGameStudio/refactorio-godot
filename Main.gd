@@ -12,32 +12,26 @@ const CELL: int = 64
 const TICK_INTERVAL: float = 0.5
 
 # --- 建筑类型 ---
-enum Building { EMPTY, BELT, SOURCE, SINK }
+enum Building { EMPTY, BELT, SOURCE, SINK, INPUT }
 
 # --- 传送带方向 ---
 enum Dir { UP, DOWN, LEFT, RIGHT }
 
-# --- 颜色（与重构前一致） ---
-const C_BELT     := Color(0.30, 0.30, 0.36, 0.75)
-const C_BELT_HI  := Color(0.45, 0.45, 0.52)
-const C_SOURCE   := Color(0.20, 0.60, 0.30, 0.85)
-const C_SINK     := Color(0.60, 0.25, 0.25, 0.85)
-const C_ARROW    := Color(0.85, 0.85, 0.90)
-
-# --- 源头 / 终点坐标 ---
-const SOURCE_POS := Vector2i(1, 4)
-const SINK_POS   := Vector2i(10, 4)
+# --- 从关卡中的机器节点读取，不再硬编码初始位置 ---
+var SOURCE_POS := Vector2i(-1, -1)
+var SINK_POS := Vector2i(-1, -1)
+const PlacedBuilding = preload("res://PlacedBuilding.gd")
+var _source_machine: Node2D
+var _input_cell := Vector2i(-1, -1)
 
 # --- 场景节点引用（@onready 在 _ready 之前由引擎赋值） ---
 @onready var _worker: Node2D = $Worker
 @onready var _box: Sprite2D = $Box
-@onready var _floor_layer: Node2D = $FloorLayer
 @onready var _building_layer: Node2D = $BuildingLayer
 @onready var _deco_layer: Node2D = $DecorationLayer
 @onready var _grid_overlay: Node2D = $GridOverlay
 @onready var _item_layer: Node2D = $ItemLayer
 @onready var _score_label: Label = $UI/ScoreLabel
-@onready var _hint_label: Label = $UI/HintLabel
 @onready var _tick_timer: Timer = $TickTimer
 
 # --- 传送带纹理（加载一次，所有传送带节点共享） ---
@@ -55,8 +49,8 @@ const _LEFT_END_SRC_SIZE:   Vector2 = Vector2(449, 343)
 const _MIDDLE_SRC_SIZE:     Vector2 = Vector2(425, 333)
 const _RIGHT_END_SRC_SIZE:  Vector2 = Vector2(455, 342)
 # --- 源头机器 / 终点机器纹理（替换原 ColorRect+Label） ---
-const _START_MACHINE_TEX: Texture2D = preload("res://assets/StartMachine.png")
-const _END_MACHINE_TEX:   Texture2D = preload("res://assets/EndMachine.png")
+const _START_MACHINE_TEX: Texture2D = preload("res://assets/Machines/StartMachine.png")
+const _END_MACHINE_TEX:   Texture2D = preload("res://assets/Machines/EndMachine.png")
 const _START_MACHINE_SRC_SIZE: Vector2 = Vector2(721, 896)
 const _END_MACHINE_SRC_SIZE:   Vector2 = Vector2(707, 895)
 # --- 传送带滚动 Shader（所有 belt Sprite 共享同一 material，offset 全局累加） ---
@@ -151,26 +145,63 @@ func _init_grid() -> void:
 			col[y] = { "type": Building.EMPTY }
 		buildings[x] = col
 
-	# --- 阶段 1：仅写入数据 buildings[]，不创建可视节点 ---
-	buildings[SOURCE_POS.x][SOURCE_POS.y] = { "type": Building.SOURCE, "node": null }
-	buildings[SINK_POS.x][SINK_POS.y] = { "type": Building.SINK, "node": null }
-	var _initial := [Vector2i(2,4), Vector2i(3,4), Vector2i(4,4), Vector2i(5,4),
-					 Vector2i(6,4), Vector2i(7,4), Vector2i(8,4), Vector2i(9,4)]
-	for pos in _initial:
-		buildings[pos.x][pos.y] = { "type": Building.BELT, "dir": Dir.RIGHT, "node": null }
+	SOURCE_POS = Vector2i(-1, -1)
+	SINK_POS = Vector2i(-1, -1)
+	_source_machine = null
+	_input_cell = Vector2i(-1, -1)
+	# 场景节点是初始布局的唯一来源；保留节点及其机器外观。
+	for node in _building_layer.get_children():
+		if not node is PlacedBuilding:
+			continue
+		var pos := world_to_cell(node.global_position)
+		if not _in_bounds(pos) or buildings[pos.x][pos.y].type != Building.EMPTY:
+			push_error("建筑位置越界或重叠：%s" % node.name)
+			continue
+		var type: int = node.building_type
+		buildings[pos.x][pos.y] = {"type": type, "node": node}
+		if type == Building.BELT:
+			buildings[pos.x][pos.y]["dir"] = node.direction
+		else:
+			node.z_index = GridDepth.at_row(pos.y)
+			if type == Building.SOURCE:
+				SOURCE_POS = pos
+				_source_machine = node
+			elif type == Building.SINK:
+				SINK_POS = pos
 
-	# --- 阶段 2：所有数据齐备后，统一创建可视节点 ---
-	# 这样 belt 端盖判定能看到完整链路状态
+	if is_instance_valid(_source_machine) and _source_machine.has_node("InputBelt"):
+		var input: Node2D = _source_machine.get_node("InputBelt")
+		_input_cell = world_to_cell(input.global_position)
+		if _in_bounds(_input_cell) and buildings[_input_cell.x][_input_cell.y].type == Building.EMPTY:
+			buildings[_input_cell.x][_input_cell.y] = {"type": Building.INPUT, "node": input}
+			input.get_node("Surface").material = _belt_material
+		else:
+			push_error("机器输入带必须位于空闲的地板格上")
+			_input_cell = Vector2i(-1, -1)
+
+	# 数据齐备后绑定滚动材质，并按实际邻接关系更新端盖/转角。
 	for x in COLS:
 		for y in ROWS:
-			var t: int = buildings[x][y].type
-			if t == Building.EMPTY:
+			var b: Dictionary = buildings[x][y]
+			if b.type != Building.BELT:
 				continue
-			var d: int = buildings[x][y].get("dir", -1) if t == Building.BELT else -1
-			var node: CanvasItem = _make_building_node(Vector2i(x, y), t, d)
-			_building_layer.add_child(node)
-			node.owner = self
-			buildings[x][y]["node"] = node
+			var pos := Vector2i(x, y)
+			if _corner_info(pos).is_corner:
+				# 编辑器改动布局后形成的转角，保留放置节点，仅替换外观。
+				for child in b.node.get_children():
+					b.node.remove_child(child)
+					child.queue_free()
+				var info := _corner_info(pos)
+				b.node.add_child(_make_corner_ring(info.in_dir, info.out_dir))
+			else:
+				var surface: Sprite2D = b.node.get_node("Surface")
+				var frame: Sprite2D = b.node.get_node("Frame")
+				surface.material = _belt_material
+				var angle: float = _dir_to_vector(b.dir).angle()
+				surface.rotation = angle
+				frame.rotation = angle
+				frame.texture = _pick_overlay_tex(pos, b.dir)
+				frame.scale = Vector2.ONE * (float(CELL) / _overlay_src_size(frame.texture).x)
 
 	_refresh_occupancy()
 
@@ -226,6 +257,8 @@ func _find_worker_path(from_world: Vector2, to_world: Vector2) -> PackedVector2A
 func _set_building(pos: Vector2i, type: int, dir: int = Dir.RIGHT) -> void:
 	if not _in_bounds(pos):
 		return
+	if buildings[pos.x][pos.y].type == Building.INPUT:
+		return
 	var old: Dictionary = buildings[pos.x][pos.y]
 	# 移除旧节点
 	if old.has("node") and old["node"] != null:
@@ -268,9 +301,8 @@ func _rebuild_belt_at(pos: Vector2i) -> void:
 	node.owner = self
 	b["node"] = node
 
-# 根据建筑类型创建对应的可视节点（ColorRect + 箭头/标签）
+# 根据建筑类型创建对应的纹理节点。
 func _make_building_node(pos: Vector2i, type: int, dir: int) -> CanvasItem:
-	var rect := Rect2(pos.x * CELL, pos.y * CELL, CELL, CELL)
 	match type:
 		Building.BELT:
 			var n := Node2D.new()
@@ -308,15 +340,8 @@ func _make_building_node(pos: Vector2i, type: int, dir: int) -> CanvasItem:
 				overlay.texture = overlay_tex
 				overlay.centered = true
 				overlay.position = Vector2(CELL / 2.0, CELL / 2.0)
-				# 端盖自身包含方向信息，按方向旋转：
-				# RIGHT=0, LEFT=180, DOWN=90, UP=270
-				var odeg: float = 0.0
-				match dir:
-					Dir.RIGHT: odeg = 0.0
-					Dir.DOWN:  odeg = 90.0
-					Dir.LEFT:  odeg = 180.0
-					Dir.UP:    odeg = 270.0
-				overlay.rotation_degrees = odeg
+				# 结构件与带面使用相同方向。
+				overlay.rotation_degrees = deg
 				# 按各自原图比例缩放，使长边接近 CELL（与底层一致）
 				var src_size: Vector2 = _overlay_src_size(overlay_tex)
 				var s: float = float(CELL) / src_size.x
@@ -514,6 +539,12 @@ func _clear_building(pos: Vector2i) -> void:
 	if not _in_bounds(pos):
 		return
 	var old: Dictionary = buildings[pos.x][pos.y]
+	if old.type == Building.INPUT:
+		return
+	if old.type == Building.SOURCE and pos == SOURCE_POS and _in_bounds(_input_cell):
+		buildings[_input_cell.x][_input_cell.y] = {"type": Building.EMPTY}
+		_input_cell = Vector2i(-1, -1)
+		_source_machine = null
 	if old.has("node") and old["node"] != null:
 		var old_node: Node = old["node"]
 		old_node.queue_free()
@@ -542,9 +573,6 @@ func _rotate_belt(pos: Vector2i) -> void:
 	_rebuild_belt_at(pos + Vector2i(1, 0))
 	_rebuild_belt_at(pos + Vector2i(0, -1))
 	_rebuild_belt_at(pos + Vector2i(0, 1))
-
-# 把 8 个装饰各放到一个 EMPTY 格子（仅使用一次，不与源头/终点/初始传送带重叠）
-# 装饰位置由用户在场景编辑器中手动布置，运行时不改动
 
 func _process(delta: float) -> void:
 	# 推进所有物品的移动进度 (0..1)
@@ -707,11 +735,11 @@ func _input(event: InputEvent) -> void:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			_press_world = get_global_mouse_position()
 			_pointer_dragged = false
-			_drag_can_build = b.type != Building.SOURCE and b.type != Building.SINK and not _box_contains(_press_world)
+			_drag_can_build = b.type not in [Building.SOURCE, Building.SINK, Building.INPUT] and not _box_contains(_press_world)
 			_drag_active = true
 			_drag_start = cell
 			_drag_path = []
-			_grid_overlay.preview_path = _drag_path if _drag_path.size() > 1 else []
+			_grid_overlay.preview_path = []
 			_grid_overlay.queue_redraw()
 
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
@@ -749,7 +777,9 @@ func _finish_left_gesture(world: Vector2) -> void:
 	if _drag_path.size() > 1:
 		_place_belt_path(_drag_path)
 	elif not _pointer_dragged and _in_bounds(world_to_cell(world)):
-		if _box_contains(world):
+		if world_to_cell(world) == _input_cell:
+			_request_box_delivery()
+		elif _box_contains(world):
 			_worker.request_pickup(_box)
 		else:
 			var cell := world_to_cell(world)
@@ -775,7 +805,7 @@ func _place_belt_path(path: Array) -> void:
 		if not _in_bounds(pos):
 			continue
 		var b: Dictionary = buildings[pos.x][pos.y]
-		if b.type == Building.SOURCE or b.type == Building.SINK:
+		if b.type in [Building.SOURCE, Building.SINK, Building.INPUT]:
 			continue  # 不覆盖源头/终点
 		var old: Dictionary = buildings[pos.x][pos.y]
 		if old.has("node") and old["node"] != null:
@@ -797,10 +827,22 @@ func _place_belt_path(path: Array) -> void:
 # Tick 逻辑
 # ============================================================
 
+func _request_box_delivery() -> void:
+	if not _worker.carrying_box or not is_instance_valid(_source_machine) or _source_machine.feeding:
+		return
+	# 只允许从输入带左侧投放；左侧不可达时保留手中的箱子。
+	if not is_cell_walkable(_input_cell + Vector2i.LEFT):
+		return
+	_worker.request_delivery(_source_machine, _source_machine.delivery_position())
+
 func _on_tick() -> void:
+	if not _in_bounds(SOURCE_POS) or not _in_bounds(SINK_POS):
+		return
 	# 1. 源头生成物品（直接放在源头右侧的 belt 格上，避免在源头格凭空出现）
 	var source_out_pos: Vector2i = SOURCE_POS + Vector2i(1, 0)
-	if not _has_item_at(source_out_pos):
+	if is_instance_valid(_source_machine) and _source_machine.has_method("consume_capacity") \
+			and _in_bounds(source_out_pos) and buildings[source_out_pos.x][source_out_pos.y].type == Building.BELT \
+			and not _has_item_at(source_out_pos) and _source_machine.consume_capacity():
 		items.append({ "pos": source_out_pos, "prev_pos": source_out_pos, "progress": 1.0 })
 
 	# 2. 尝试移动所有物品（离终点近的先移动）
