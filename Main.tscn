@@ -25,8 +25,23 @@
 [ext_resource type="Texture2D" uid="uid://bfhsvx4kw12he" path="res://assets/TransportBelt/TransportRightEnd.png" id="24_right"]
 [ext_resource type="Script" uid="uid://dpqi6xpqn438d" path="res://SourceMachine.gd" id="25_source_logic"]
 
+[ext_resource type="PackedScene" path="res://WeldingMachine.tscn" id="26_welder"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/box_insert.wav" id="sfx_insert"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/shipment_success.wav" id="sfx_shipment"]
+[ext_resource type="AudioStream" path="res://assets/audio/Workshop Groove.mp3" id="27_music"]
+
 [node name="Main" type="Node2D" unique_id=1685539245]
 script = ExtResource("1_main")
+
+[node name="BackgroundMusic" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("27_music")
+volume_db = -10.0
+autoplay = true
+
+[node name="ShipmentSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("sfx_shipment")
+volume_db = -10.0
+bus = &"SFX"
 
 [node name="FloorLayer" type="Node2D" parent="." unique_id=1957421631]
 
@@ -761,6 +776,11 @@ position = Vector2(32, 17)
 scale = Vector2(0.13928571, 0.13928571)
 texture = ExtResource("19_start")
 
+[node name="InsertSound" type="AudioStreamPlayer" parent="BuildingLayer/SourceMachine"]
+stream = ExtResource("sfx_insert")
+volume_db = -6.0
+bus = &"SFX"
+
 [node name="InputBelt" type="Node2D" parent="BuildingLayer/SourceMachine" unique_id=272164937]
 z_as_relative = false
 position = Vector2(-64, 0)
@@ -847,19 +867,9 @@ position = Vector2(32, 32)
 scale = Vector2(0.15058823, 0.15058823)
 texture = ExtResource("23_middle")
 
-[node name="Belt_6_4" type="Node2D" parent="BuildingLayer" unique_id=469942335]
+[node name="WeldingMachine" parent="BuildingLayer" instance=ExtResource("26_welder")]
+z_index = 26
 position = Vector2(384, 256)
-script = ExtResource("18_placed")
-
-[node name="Surface" type="Sprite2D" parent="BuildingLayer/Belt_6_4" unique_id=1038652057]
-position = Vector2(32, 32)
-scale = Vector2(0.14190687, 0.14190687)
-texture = ExtResource("21_belt")
-
-[node name="Frame" type="Sprite2D" parent="BuildingLayer/Belt_6_4" unique_id=1619767593]
-position = Vector2(32, 32)
-scale = Vector2(0.15058823, 0.15058823)
-texture = ExtResource("23_middle")
 
 [node name="Belt_7_4" type="Node2D" parent="BuildingLayer" unique_id=1974290853]
 position = Vector2(448, 256)
@@ -937,7 +947,7 @@ offset_left = 8.0
 offset_top = 24.0
 offset_right = 400.0
 offset_bottom = 42.0
-text = "左键: 移动/搬箱/投料   拖拽: 铺设传送带   右键: 清除"
+text = "WASD: 移动  左键: 寻路/搬箱/投料  拖拽: 铺带  E: 拾箱/投料/点焊  B: 放置点焊机  M: 移动机器  右键: 拆除"
 
 [node name="TickTimer" type="Timer" parent="." unique_id=1996499133]
 wait_time = 0.5

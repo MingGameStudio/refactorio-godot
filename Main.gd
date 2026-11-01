@@ -12,7 +12,11 @@ const CELL: int = 64
 const TICK_INTERVAL: float = 0.5
 
 # --- 建筑类型 ---
-enum Building { EMPTY, BELT, SOURCE, SINK, INPUT }
+enum Building { EMPTY, BELT, SOURCE, SINK, INPUT, WELDER }
+const WELDER_SCENE = preload("res://WeldingMachine.tscn")
+const WeldingInteraction = preload("res://WeldingInteraction.gd")
+var welding_interaction: Node
+var _moving_welder: Node2D
 
 # --- 传送带方向 ---
 enum Dir { UP, DOWN, LEFT, RIGHT }
@@ -33,6 +37,7 @@ var _input_cell := Vector2i(-1, -1)
 @onready var _item_layer: Node2D = $ItemLayer
 @onready var _score_label: Label = $UI/ScoreLabel
 @onready var _tick_timer: Timer = $TickTimer
+@onready var _default_hint: String = $UI/HintLabel.text
 
 # --- 传送带纹理（加载一次，所有传送带节点共享） ---
 const _BELT_TEX: Texture2D = preload("res://assets/TransportBelt/Belt.png")
@@ -64,6 +69,8 @@ var buildings: Array = []
 const GridOccupancyData = preload("res://GridOccupancy.gd")
 var occupancy = GridOccupancyData.new(Vector2i(COLS, ROWS), CELL)
 var navigation := AStarGrid2D.new()
+const GridCollision = preload("res://GridCollision.gd")
+var grid_collision: Node2D
 const GridDepth = preload("res://GridDepth.gd")
 # 每个物品: { pos: Vector2i, prev_pos: Vector2i, progress: float(0..1) }
 var items: Array = []
@@ -111,8 +118,17 @@ func _ready() -> void:
 	navigation.default_estimate_heuristic = AStarGrid2D.HEURISTIC_MANHATTAN
 	navigation.update()
 	_worker.pathfinder = _find_worker_path
+	grid_collision = GridCollision.new()
+	grid_collision.name = "GridCollision"
+	add_child(grid_collision)
+	grid_collision.configure(Vector2i(COLS, ROWS), CELL)
 	occupancy.changed.connect(_sync_navigation)
 	_init_grid()
+	welding_interaction = WeldingInteraction.new()
+	welding_interaction.game = self
+	welding_interaction.worker = _worker
+	welding_interaction.name = "WeldingInteraction"
+	add_child(welding_interaction)
 
 	# 把 ItemLayer 的 items 共享引用交给它
 	_item_layer.items = items
@@ -223,6 +239,7 @@ func is_cell_walkable(cell: Vector2i) -> bool:
 	return occupancy.is_walkable(cell)
 
 func _sync_navigation() -> void:
+	grid_collision.sync(occupancy)
 	# update() 会清除 solid 状态；这里只更新占用，不重建网格配置。
 	for x in COLS:
 		for y in ROWS:
@@ -259,7 +276,11 @@ func _set_building(pos: Vector2i, type: int, dir: int = Dir.RIGHT) -> void:
 		return
 	if buildings[pos.x][pos.y].type == Building.INPUT:
 		return
+	if type != Building.EMPTY and _cell_overlaps_worker(pos):
+		return
 	var old: Dictionary = buildings[pos.x][pos.y]
+	if old.type == Building.WELDER and not old.node.can_remove():
+		return
 	# 移除旧节点
 	if old.has("node") and old["node"] != null:
 		var old_node: Node = old["node"]
@@ -276,7 +297,7 @@ func _set_building(pos: Vector2i, type: int, dir: int = Dir.RIGHT) -> void:
 	buildings[pos.x][pos.y] = entry
 
 	# 刷新邻居 belt 的端盖（水平/垂直方向都刷新）
-	if type == Building.BELT or old.type == Building.BELT:
+	if type in [Building.BELT, Building.WELDER] or old.type in [Building.BELT, Building.WELDER]:
 		_rebuild_belt_at(pos + Vector2i(-1, 0))
 		_rebuild_belt_at(pos + Vector2i(1, 0))
 		_rebuild_belt_at(pos + Vector2i(0, -1))
@@ -304,6 +325,11 @@ func _rebuild_belt_at(pos: Vector2i) -> void:
 # 根据建筑类型创建对应的纹理节点。
 func _make_building_node(pos: Vector2i, type: int, dir: int) -> CanvasItem:
 	match type:
+		Building.WELDER:
+			var machine: Node2D = WELDER_SCENE.instantiate()
+			machine.position = Vector2(pos) * CELL
+			machine.z_index = GridDepth.at_row(pos.y)
+			return machine
 		Building.BELT:
 			var n := Node2D.new()
 			n.position = Vector2(pos.x * CELL, pos.y * CELL)
@@ -458,7 +484,7 @@ func _corner_info(pos: Vector2i) -> Dictionary:
 		if not _in_bounds(nb_pos):
 			continue
 		var nb: Dictionary = buildings[nb_pos.x][nb_pos.y]
-		if d != out_dir and ((nb.type == Building.BELT and nb.dir == _opposite_dir(d)) or (nb.type == Building.SOURCE and d == Dir.LEFT)):
+		if d != out_dir and ((nb.type == Building.BELT and nb.dir == _opposite_dir(d)) or (nb.type in [Building.SOURCE, Building.WELDER] and d == Dir.LEFT)):
 			in_dir = d  # 上游格所在方位
 			break
 	if in_dir < 0:
@@ -541,6 +567,11 @@ func _clear_building(pos: Vector2i) -> void:
 	var old: Dictionary = buildings[pos.x][pos.y]
 	if old.type == Building.INPUT:
 		return
+	if old.type == Building.WELDER:
+		if not old.node.can_remove():
+			$UI/HintLabel.text = "点焊机仍有原料或成品，请完成加工并输出后再拆除。"
+			return
+		old.node.cancel_operation()
 	if old.type == Building.SOURCE and pos == SOURCE_POS and _in_bounds(_input_cell):
 		buildings[_input_cell.x][_input_cell.y] = {"type": Building.EMPTY}
 		_input_cell = Vector2i(-1, -1)
@@ -550,7 +581,7 @@ func _clear_building(pos: Vector2i) -> void:
 		old_node.queue_free()
 	buildings[pos.x][pos.y] = { "type": Building.EMPTY }
 	_refresh_occupancy()
-	if old.type == Building.BELT:
+	if old.type in [Building.BELT, Building.WELDER]:
 		# 刷新四向邻居的端盖
 		_rebuild_belt_at(pos + Vector2i(-1, 0))
 		_rebuild_belt_at(pos + Vector2i(1, 0))
@@ -723,6 +754,18 @@ func _mouse_quadrant_horizontal_first(start: Vector2i, end: Vector2i, mouse_worl
 # ============================================================
 
 func _input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		var cell := world_to_cell(get_global_mouse_position())
+		if event.physical_keycode == KEY_ESCAPE:
+			_moving_welder = null
+			$UI/HintLabel.text = _default_hint
+		elif event.physical_keycode == KEY_B and _in_bounds(cell):
+			if buildings[cell.x][cell.y].type == Building.EMPTY and cell != world_to_cell(_worker.global_position) and not _has_item_at(cell):
+				_set_building(cell, Building.WELDER)
+		elif event.physical_keycode == KEY_M and _in_bounds(cell):
+			if buildings[cell.x][cell.y].type == Building.WELDER:
+				_moving_welder = buildings[cell.x][cell.y].node
+				$UI/HintLabel.text = "点击空地移动点焊机；Esc 取消。库存随机器保留。"
 	# 用 get_global_mouse_position() 完成 屏幕 -> 视口 -> 世界 的转换，
 	# 在 window/stretch/mode="canvas_items" + aspect="expand" 下也正确对齐格子。
 	# 不能直接用 event.position（那是屏幕像素坐标，会导致点击位置偏移）。
@@ -733,9 +776,14 @@ func _input(event: InputEvent) -> void:
 		var b: Dictionary = buildings[cell.x][cell.y]
 
 		if event.button_index == MOUSE_BUTTON_LEFT:
+			if is_instance_valid(_moving_welder):
+				if move_welder(_moving_welder, cell):
+					_moving_welder = null
+					$UI/HintLabel.text = _default_hint
+				return
 			_press_world = get_global_mouse_position()
 			_pointer_dragged = false
-			_drag_can_build = b.type not in [Building.SOURCE, Building.SINK, Building.INPUT] and not _box_contains(_press_world)
+			_drag_can_build = b.type not in [Building.SOURCE, Building.SINK, Building.INPUT, Building.WELDER] and not _box_contains(_press_world)
 			_drag_active = true
 			_drag_start = cell
 			_drag_path = []
@@ -743,6 +791,9 @@ func _input(event: InputEvent) -> void:
 			_grid_overlay.queue_redraw()
 
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
+			if b.type == Building.WELDER:
+				_clear_building(cell)
+				return
 			# 右键：单格删除（拖拽期间也允许）
 			if b.type == Building.SOURCE or b.type == Building.SINK:
 				return
@@ -804,8 +855,10 @@ func _place_belt_path(path: Array) -> void:
 		var dir: int = entry["dir"]
 		if not _in_bounds(pos):
 			continue
+		if _cell_overlaps_worker(pos):
+			continue
 		var b: Dictionary = buildings[pos.x][pos.y]
-		if b.type in [Building.SOURCE, Building.SINK, Building.INPUT]:
+		if b.type in [Building.SOURCE, Building.SINK, Building.INPUT, Building.WELDER]:
 			continue  # 不覆盖源头/终点
 		var old: Dictionary = buildings[pos.x][pos.y]
 		if old.has("node") and old["node"] != null:
@@ -836,11 +889,9 @@ func _request_box_delivery() -> void:
 	_worker.request_delivery(_source_machine, _source_machine.delivery_position())
 
 func _on_tick() -> void:
-	if not _in_bounds(SOURCE_POS) or not _in_bounds(SINK_POS):
-		return
 	# 1. 源头生成物品（直接放在源头右侧的 belt 格上，避免在源头格凭空出现）
 	var source_out_pos: Vector2i = SOURCE_POS + Vector2i(1, 0)
-	if is_instance_valid(_source_machine) and _source_machine.has_method("consume_capacity") \
+	if _in_bounds(SOURCE_POS) and is_instance_valid(_source_machine) and _source_machine.has_method("consume_capacity") \
 			and _in_bounds(source_out_pos) and buildings[source_out_pos.x][source_out_pos.y].type == Building.BELT \
 			and not _has_item_at(source_out_pos) and _source_machine.consume_capacity():
 		items.append({ "pos": source_out_pos, "prev_pos": source_out_pos, "progress": 1.0 })
@@ -862,6 +913,7 @@ func _on_tick() -> void:
 
 		if cur == SINK_POS:
 			score += 1
+			$ShipmentSound.play()
 			continue
 
 		var dir: int = -1
@@ -885,6 +937,11 @@ func _on_tick() -> void:
 					continue
 
 				var nb: Dictionary = buildings[next_pos.x][next_pos.y]
+				if nb.type == Building.WELDER and b.type == Building.BELT and dir == Dir.RIGHT \
+						and cur == next_pos + Vector2i.LEFT and item.get("kind", "cell") == "cell":
+					if nb.node.accept_cell():
+						occupied.erase(_key(cur))
+						continue
 				if (nb.type == Building.BELT or nb.type == Building.EMPTY) and not occupied.has(_key(next_pos)):
 					occupied.erase(_key(cur))
 					occupied[_key(next_pos)] = true
@@ -899,9 +956,53 @@ func _on_tick() -> void:
 		blocked.append(item)
 
 	items = moved + blocked
+	# 只在成功写入传送带后清除机内成品，输出堵塞时保留所有权。
+	for machine in get_welding_machines():
+		if not machine.output_pending:
+			continue
+		var machine_cell := world_to_cell(machine.global_position)
+		var output := machine_cell + Vector2i.RIGHT
+		if _in_bounds(output) and buildings[output.x][output.y].type == Building.BELT and not _has_item_at(output):
+			items.append({"kind": "battery_set", "pos": output, "prev_pos": machine_cell, "progress": 0.0})
+			machine.confirm_output()
 	# ItemLayer 需要拿到最新数组引用
 	_item_layer.items = items
 	_item_layer.queue_redraw()
+
+func get_welding_machines() -> Array:
+	var machines: Array = []
+	for column in buildings:
+		for entry in column:
+			if entry.type == Building.WELDER and is_instance_valid(entry.node):
+				machines.append(entry.node)
+	return machines
+
+func move_welder(machine: Node2D, destination: Vector2i) -> bool:
+	if not is_instance_valid(machine) or not _in_bounds(destination):
+		return false
+	if buildings[destination.x][destination.y].type != Building.EMPTY or _has_item_at(destination) \
+			or _cell_overlaps_worker(destination):
+		return false
+	var previous := world_to_cell(machine.global_position)
+	if not _in_bounds(previous) or buildings[previous.x][previous.y].get("node") != machine:
+		return false
+	machine.cancel_operation()
+	buildings[previous.x][previous.y] = {"type": Building.EMPTY}
+	buildings[destination.x][destination.y] = {"type": Building.WELDER, "node": machine}
+	machine.global_position = to_global(Vector2(destination) * CELL)
+	machine.z_index = GridDepth.at_row(destination.y)
+	for cell in [previous, destination]:
+		for offset in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
+			_rebuild_belt_at(cell + offset)
+	_refresh_occupancy()
+	return true
+
+func _cell_overlaps_worker(cell: Vector2i) -> bool:
+	var center := to_local(_worker.global_position)
+	var rect := Rect2(Vector2(cell) * CELL, Vector2.ONE * CELL)
+	var nearest := center.clamp(rect.position, rect.end)
+	var radius: float = _worker.get_node("CollisionShape2D").shape.radius * _worker.scale.x + _worker.safe_margin
+	return center.distance_to(nearest) <= radius
 
 func _in_bounds(pos: Vector2i) -> bool:
 	return pos.x >= 0 and pos.x < COLS and pos.y >= 0 and pos.y < ROWS

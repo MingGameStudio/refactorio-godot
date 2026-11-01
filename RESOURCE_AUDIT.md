@@ -7,10 +7,11 @@
 | 文件 | 大小 | 说明 |
 | --- | ---: | --- |
 | assets/Worker/WorkerSprites.png | 255,565 字节 | 未被场景或代码引用的人物总图；当前动画使用 WorkerIdle、WorkerWalk、WorkerHoldIdle、WorkerHoldWalk。可能仍有美术源文件价值。 |
-| assets/Machines/WeldingMachine.png | 1,562,082 字节 | 焊接机图片尚未接入当前关卡或代码，可能是预备素材。 |
 | assets/FloorDecorations/patch_1_3.tres | 283 字节 | 未被引用的装饰 AtlasTexture 切片；它引用的 FloorDecorations.png 仍被其他装饰使用，不能一起删除。 |
 
-以上三个源文件合计 1,817,930 字节，约 1.73 MiB。前两张图片各自的 .import 文件属于相应导入配置，也一并保留。
+以上两个源文件合计 255,848 字节，约 250 KiB。人物总图的 .import 文件也一并保留。
+
+点焊功能加入后，assets/Machines/WeldingMachine.png 已由 WeldingMachine.tscn 使用，assets/BatterySet.png 已由 ItemLayer.gd 使用，不属于未使用资源。
 
 ## 不参与游戏运行的辅助产物
 

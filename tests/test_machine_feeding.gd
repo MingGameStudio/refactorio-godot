@@ -1,4 +1,5 @@
 extends SceneTree
+const PhysicsSteps = preload("res://tests/physics_steps.gd")
 
 var failures := 0
 
@@ -11,10 +12,15 @@ func _initialize() -> void:
 	call_deferred("_run")
 
 func _run() -> void:
+	Engine.physics_ticks_per_second = 120
+	Engine.time_scale = 4.0
 	var game = load("res://Main.tscn").instantiate()
 	root.add_child(game)
 	game.get_node("TickTimer").stop()
 	game.set_process(false)
+	# 此测试单独验证上料台十电芯产量；点焊加工由 test_welding 覆盖。
+	for welder in game.get_welding_machines():
+		game._set_building(game.world_to_cell(welder.global_position), game.Building.BELT)
 	var machine = game.get_node("BuildingLayer/SourceMachine")
 	machine.set_process(false)
 	var worker = game.get_node("Worker")
@@ -30,7 +36,7 @@ func _run() -> void:
 		game._on_tick()
 	check(game.items.is_empty() and machine.capacity == 0, "Empty machine cannot produce")
 	worker.request_pickup(game.get_node("Box"))
-	worker._physics_process(10.0)
+	await PhysicsSteps.advance(worker, 10.0)
 	check(worker.carrying_box, "Box picked up")
 	var original_position: Vector2 = worker.global_position
 	for offset in [Vector2(0, -64), Vector2(0, 64), Vector2(64, 0)]:
@@ -43,19 +49,19 @@ func _run() -> void:
 	worker.global_position = original_position
 	game._set_building(input + Vector2i.LEFT, game.Building.BELT)
 	game._request_box_delivery()
-	worker._physics_process(0.1)
+	await PhysicsSteps.advance(worker, 0.1)
 	check(worker.carrying_box and not machine.feeding, "Blocked left side does not fall back to another side")
 	game._clear_building(input + Vector2i.LEFT)
 	game._request_box_delivery()
 	check(worker.target_position == machine.delivery_position(), "Delivery targets left cell center")
-	worker._physics_process(0.1)
+	await PhysicsSteps.advance(worker, 0.1)
 	check(worker.carrying_box and not machine.feeding, "Walk before dropping")
 	worker.move_to(worker.global_position)
-	worker._physics_process(10.0)
+	await PhysicsSteps.advance(worker, 10.0)
 	check(worker.carrying_box and not machine.feeding, "Movement cancels delivery")
 	game._request_box_delivery()
 	for i in 1000:
-		worker._physics_process(0.02)
+		await PhysicsSteps.advance(worker, 0.02)
 		check(game.is_cell_walkable(game.world_to_cell(worker.global_position)), "Delivery avoids obstacles")
 		if machine.feeding:
 			break

@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://bsldi8xjguwh0"
+path="res://.godot/imported/Workshop Groove.mp3-c79092754bbd2bebd4b62d36d0be2caa.mp3str"
+
+[deps]
+
+source_file="res://assets/audio/Workshop Groove.mp3"
+dest_files=["res://.godot/imported/Workshop Groove.mp3-c79092754bbd2bebd4b62d36d0be2caa.mp3str"]
+
+[params]
+
+loop=true
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

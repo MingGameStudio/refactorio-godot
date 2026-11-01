@@ -6,6 +6,7 @@ const CELL: int = 64
 
 # 货物纹理（流水线上的物品）
 const _SOURCE_TEX: Texture2D = preload("res://assets/Source.png")
+const _BATTERY_SET_TEX: Texture2D = preload("res://assets/BatterySet.png")
 const _SOURCE_SRC_SIZE: Vector2 = Vector2(133, 266)  # 原始 133×266，瘦长
 
 # 终点位置（由 Main.gd 注入）：物品到达终点时直接不绘制
@@ -37,4 +38,8 @@ func _draw() -> void:
 			px = sampled.x
 			py = sampled.y
 		# 居中绘制
-		draw_texture_rect(_SOURCE_TEX, Rect2(px - dw / 2.0, py - dh / 2.0, dw, dh), false)
+		if item.get("kind", "cell") == "battery_set":
+			var size := _BATTERY_SET_TEX.get_size() * (CELL * 0.55 / _BATTERY_SET_TEX.get_height())
+			draw_texture_rect(_BATTERY_SET_TEX, Rect2(Vector2(px, py) - size * 0.5, size), false)
+		else:
+			draw_texture_rect(_SOURCE_TEX, Rect2(px - dw / 2.0, py - dh / 2.0, dw, dh), false)

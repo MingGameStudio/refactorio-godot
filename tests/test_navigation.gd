@@ -1,4 +1,5 @@
 extends SceneTree
+const PhysicsSteps = preload("res://tests/physics_steps.gd")
 
 var failures := 0
 var game: Node2D
@@ -15,9 +16,9 @@ func center(cell: Vector2i) -> Vector2:
 func travel(destination: Vector2) -> void:
 	for i in 1500:
 		var before := worker.global_position
-		worker._physics_process(0.02)
+		await PhysicsSteps.advance(worker, 0.02)
 		check(game.is_cell_walkable(game.world_to_cell(worker.global_position)), "Worker stays on walkable floor")
-		check(before.distance_to(worker.global_position) <= worker.move_speed * 0.02 + 0.001, "Movement respects speed")
+		check(before.distance_to(worker.global_position) <= worker.move_speed * worker.get_physics_process_delta_time() + 0.001, "Movement respects speed")
 		if worker.global_position.is_equal_approx(destination):
 			break
 	check(worker.global_position.is_equal_approx(destination), "Worker arrives at destination")
@@ -26,6 +27,8 @@ func _initialize() -> void:
 	call_deferred("_run")
 
 func _run() -> void:
+	Engine.physics_ticks_per_second = 120
+	Engine.time_scale = 4.0
 	game = load("res://Main.tscn").instantiate()
 	root.add_child(game)
 	game.get_node("TickTimer").stop()
@@ -40,7 +43,7 @@ func _run() -> void:
 	var destination := center(Vector2i(5, 5))
 	check(worker.move_to(destination), "Route around entire initial machine and belt row exists")
 	check(worker._path.size() > 3, "Route detours around the blocked row")
-	travel(destination)
+	await travel(destination)
 	check(worker.sprite.animation == &"idle", "Arrival returns to idle")
 	var old_target: Vector2 = worker.target_position
 	check(not worker.move_to(center(game.SOURCE_POS)), "Machine destination rejected")
@@ -50,18 +53,18 @@ func _run() -> void:
 	worker.global_position = center(Vector2i(5, 1))
 	destination = center(Vector2i(8, 1))
 	check(worker.move_to(destination), "Initial straight route")
-	worker._physics_process(0.1)
+	await PhysicsSteps.advance(worker, 0.1)
 	game._set_building(Vector2i(6, 1), game.Building.BELT)
 	check(game.navigation.is_point_solid(Vector2i(6, 1)), "Build immediately updates AStar")
-	travel(destination)
+	await travel(destination)
 	game._clear_building(Vector2i(6, 1))
 	check(not game.navigation.is_point_solid(Vector2i(6, 1)), "Removal immediately updates AStar")
 	# 新障碍占用目的地后停止，不沿旧路线穿透。
 	worker.move_to(center(Vector2i(5, 1)))
-	worker._physics_process(0.1)
+	await PhysicsSteps.advance(worker, 0.1)
 	game._set_building(Vector2i(5, 1), game.Building.BELT)
 	var stopped: Vector2 = worker.global_position
-	worker._physics_process(10.0)
+	await PhysicsSteps.advance(worker, 10.0)
 	check(worker.global_position == stopped, "Blocked destination cancels route safely")
 	check(worker.sprite.animation == &"idle", "Cancelled route idles")
 	# 目标本身为空地，但四周包围，不应接受不可达目标。
@@ -71,7 +74,7 @@ func _run() -> void:
 	check(not worker.move_to(center(enclosed)), "Unreachable free cell rejected")
 	game._clear_building(enclosed + Vector2i.UP)
 	check(worker.move_to(center(enclosed)), "Removing obstacle restores reachability")
-	travel(center(enclosed))
+	await travel(center(enclosed))
 	# 点击格内任意位置，最终目标为该格中心。
 	var click := center(Vector2i(6, 6)) + Vector2(9, 7)
 	game._clear_building(Vector2i(6, 6))
@@ -82,7 +85,7 @@ func _run() -> void:
 	game._drag_can_build = true
 	game._finish_left_gesture(click)
 	check(worker.target_position == center(Vector2i(6, 6)), "Click snaps destination to cell center")
-	travel(center(Vector2i(6, 6)))
+	await travel(center(Vector2i(6, 6)))
 	game.queue_free()
 	await process_frame
 	print("Navigation checks completed: %d failures" % failures)

@@ -1,0 +1,162 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://WeldingMachine.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/Machines/WeldingMachine.png" id="2"]
+[ext_resource type="Script" path="res://WeldingProgressBar.gd" id="3"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/weld_pulse.wav" id="sfx_pulse"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/weld_complete.wav" id="sfx_complete"]
+
+[sub_resource type="StyleBoxFlat" id="ProgressBackground"]
+bg_color = Color(0.09803922, 0.12941177, 0.14901961, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.4, 0.4627451, 0.5019608, 1)
+corner_radius_top_left = 1
+corner_radius_top_right = 1
+corner_radius_bottom_left = 1
+corner_radius_bottom_right = 1
+
+[sub_resource type="StyleBoxFlat" id="ProgressFill"]
+bg_color = Color(0.9647059, 0.6392157, 0.18039216, 1)
+expand_margin_left = -1.0
+expand_margin_top = -1.0
+expand_margin_right = -1.0
+expand_margin_bottom = -1.0
+corner_radius_top_left = 1
+corner_radius_top_right = 1
+corner_radius_bottom_left = 1
+corner_radius_bottom_right = 1
+
+[sub_resource type="Gradient" id="SquareWhite"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 1)
+
+[sub_resource type="GradientTexture2D" id="SquareTexture"]
+gradient = SubResource("SquareWhite")
+width = 6
+height = 6
+
+[sub_resource type="Gradient" id="SparkColors"]
+offsets = PackedFloat32Array(0, 0.35, 0.75, 1)
+colors = PackedColorArray(1, 1, 0.95, 1, 1, 0.88, 0.2, 1, 1, 0.28, 0.03, 0.85, 0.9, 0.08, 0.01, 0)
+
+[sub_resource type="GradientTexture1D" id="SparkRamp"]
+gradient = SubResource("SparkColors")
+
+[sub_resource type="ParticleProcessMaterial" id="WeldingSparkMaterial"]
+particle_flag_disable_z = true
+direction = Vector3(1, 0, 0)
+spread = 180.0
+gravity = Vector3(0, 82.5, 0)
+initial_velocity_min = 150.0
+initial_velocity_max = 270.0
+damping_min = 22.5
+damping_max = 37.5
+scale_min = 1.0
+scale_max = 1.5
+lifetime_randomness = 0.2
+color_ramp = SubResource("SparkRamp")
+
+[sub_resource type="ParticleProcessMaterial" id="CompletionSparkMaterial"]
+particle_flag_disable_z = true
+direction = Vector3(1, 0, 0)
+spread = 180.0
+gravity = Vector3(0, 97.5, 0)
+initial_velocity_min = 180.0
+initial_velocity_max = 285.0
+damping_min = 30.0
+damping_max = 45.0
+scale_min = 1.0
+scale_max = 1.75
+lifetime_randomness = 0.3
+color_ramp = SubResource("SparkRamp")
+
+[node name="WeldingMachine" type="Node2D"]
+script = ExtResource("1")
+building_type = 5
+
+[node name="PulseSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("sfx_pulse")
+volume_db = -10.0
+bus = &"SFX"
+
+[node name="CompleteSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("sfx_complete")
+volume_db = -6.0
+bus = &"SFX"
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(32, 17)
+scale = Vector2(0.0975, 0.0975)
+texture = ExtResource("2")
+
+[node name="Status" type="Label" parent="."]
+offset_left = -45.0
+offset_top = -74.0
+offset_right = 109.0
+offset_bottom = -50.0
+mouse_filter = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 15
+horizontal_alignment = 1
+text = "电芯 0 / 2"
+
+[node name="Prompt" type="Label" parent="."]
+visible = false
+offset_left = -20.0
+offset_top = 88.0
+offset_right = 84.0
+offset_bottom = 112.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.3, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+horizontal_alignment = 1
+text = "按住 E 操作"
+
+[node name="ProgressBar" type="ProgressBar" parent="."]
+visible = false
+z_index = 2
+offset_left = -8.0
+offset_top = -86.0
+offset_right = 72.0
+offset_bottom = -78.0
+mouse_filter = 2
+theme_override_styles/background = SubResource("ProgressBackground")
+theme_override_styles/fill = SubResource("ProgressFill")
+max_value = 1.0
+step = 0.0
+show_percentage = false
+script = ExtResource("3")
+
+[node name="SparkOrigin" type="Node2D" parent="."]
+position = Vector2(30, 27)
+z_index = 1
+
+[node name="WeldingSparks" type="GPUParticles2D" parent="SparkOrigin"]
+texture_filter = 1
+emitting = false
+amount = 8
+texture = SubResource("SquareTexture")
+lifetime = 0.28
+one_shot = true
+explosiveness = 1.0
+visibility_rect = Rect2(-96, -96, 192, 192)
+local_coords = false
+fixed_fps = 60
+process_material = SubResource("WeldingSparkMaterial")
+
+[node name="CompletionSparks" type="GPUParticles2D" parent="SparkOrigin"]
+texture_filter = 1
+emitting = false
+amount = 18
+texture = SubResource("SquareTexture")
+lifetime = 0.4
+one_shot = true
+explosiveness = 1.0
+visibility_rect = Rect2(-132, -132, 264, 264)
+local_coords = false
+fixed_fps = 60
+process_material = SubResource("CompletionSparkMaterial")

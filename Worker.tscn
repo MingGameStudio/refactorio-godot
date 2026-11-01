@@ -1,12 +1,14 @@
 [gd_scene format=3 uid="uid://c7o0mejsbdvun"]
 
 [ext_resource type="Script" path="res://Worker.gd" id="1"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/box_pickup.wav" id="sfx_pickup"]
 [ext_resource type="Texture2D" uid="uid://cidqj6wvt5vkw" path="res://assets/Worker/WorkerWalk.png" id="2"]
 [ext_resource type="Texture2D" uid="uid://ccpvctux5x7kb" path="res://assets/Worker/WorkerIdle.png" id="3_idle"]
 
 [ext_resource type="Texture2D" path="res://assets/Worker/WorkerHoldIdle.png" id="4_hold_idle"]
 [ext_resource type="Texture2D" path="res://assets/Worker/WorkerHoldWalk.png" id="5_hold_walk"]
 [ext_resource type="Texture2D" path="res://assets/Box.png" id="6_box"]
+[ext_resource type="Texture2D" path="res://assets/Worker/WorkerInteract.png" id="7_interact"]
 
 [sub_resource type="AtlasTexture" id="Idle0"]
 atlas = ExtResource("3_idle")
@@ -57,8 +59,31 @@ region = Rect2(542, 0, 170, 262)
 margin = Rect2(2, 0, 14, 0)
 filter_clip = true
 
+[sub_resource type="AtlasTexture" id="InteractA"]
+atlas = ExtResource("7_interact")
+region = Rect2(0, 0, 155, 262)
+margin = Rect2(60, 0, 61, 0)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="InteractB"]
+atlas = ExtResource("7_interact")
+region = Rect2(168, 0, 152, 262)
+margin = Rect2(60, 0, 64, 0)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="InteractC"]
+atlas = ExtResource("7_interact")
+region = Rect2(339, 0, 147, 262)
+margin = Rect2(60, 0, 69, 0)
+filter_clip = true
+
 [sub_resource type="SpriteFrames" id="Frames"]
 animations = [{
+"frames": [{"duration": 1.0, "texture": SubResource("InteractA")}, {"duration": 1.0, "texture": SubResource("InteractB")}, {"duration": 1.0, "texture": SubResource("InteractC")}, {"duration": 1.0, "texture": SubResource("InteractB")}, {"duration": 1.0, "texture": SubResource("InteractA")}],
+"loop": true,
+"name": &"interact",
+"speed": 6.0
+}, {
 "frames": [{"duration": 1.0, "texture": SubResource("HoldIdle")}],
 "loop": true,
 "name": &"hold_idle",
@@ -95,9 +120,20 @@ animations = [{
 "speed": 6.0
 }]
 
-[node name="Worker" type="Node2D" unique_id=1391439299]
+[sub_resource type="CircleShape2D" id="FeetShape"]
+radius = 8.0
+
+[node name="Worker" type="CharacterBody2D" unique_id=1391439299]
 scale = Vector2(1.2, 1.2)
+motion_mode = 1
+collision_layer = 2
+collision_mask = 1
+input_pickable = false
+wall_min_slide_angle = 0.0
 script = ExtResource("1")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("FeetShape")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1966622410]
 position = Vector2(0, -29.9)
@@ -113,3 +149,8 @@ visible = false
 position = Vector2(22, -27)
 scale = Vector2(0.09, 0.09)
 texture = ExtResource("6_box")
+
+[node name="PickupSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("sfx_pickup")
+volume_db = -6.0
+bus = &"SFX"

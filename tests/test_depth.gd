@@ -1,4 +1,5 @@
 extends SceneTree
+const PhysicsSteps = preload("res://tests/physics_steps.gd")
 
 var failures := 0
 
@@ -11,6 +12,8 @@ func _initialize() -> void:
 	call_deferred("_run")
 
 func _run() -> void:
+	Engine.physics_ticks_per_second = 120
+	Engine.time_scale = 4.0
 	var game = load("res://Main.tscn").instantiate()
 	root.add_child(game)
 	game.get_node("TickTimer").stop()
@@ -32,7 +35,7 @@ func _run() -> void:
 	worker.position = Vector2(352, 224)
 	worker.move_to(Vector2(352, 96))
 	var old_depth: int = worker.z_index
-	worker._physics_process(0.5)
+	await PhysicsSteps.advance(worker, 0.5)
 	check(worker.z_index < old_depth, "Depth updates while walking across rows")
 	check(game.get_node("Box").z_index > game.get_node("FloorLayer").z_index, "Ground box remains above floor")
 	game.queue_free()

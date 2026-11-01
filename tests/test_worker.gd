@@ -1,4 +1,5 @@
 extends SceneTree
+const PhysicsSteps = preload("res://tests/physics_steps.gd")
 
 func _initialize() -> void:
 	call_deferred("_run")
@@ -12,6 +13,8 @@ func gesture(game: Node, start: Vector2, finish: Vector2) -> void:
 	game._finish_left_gesture(finish)
 
 func _run() -> void:
+	Engine.physics_ticks_per_second = 120
+	Engine.time_scale = 4.0
 	var game = load("res://Main.tscn").instantiate()
 	root.add_child(game)
 	game.get_node("TickTimer").stop()
@@ -25,20 +28,20 @@ func _run() -> void:
 	gesture(game, destination, destination)
 	assert(worker.target_position == destination)
 	assert(game.buildings[7][3].type == game.Building.EMPTY)
-	worker._physics_process(0.1)
+	await PhysicsSteps.advance(worker, 0.1)
 	assert(worker.global_position.x > start.x)
 	assert(worker.sprite.animation == &"walk")
 	assert(worker.sprite.is_playing())
-	worker._physics_process(10.0)
+	await PhysicsSteps.advance(worker, 10.0)
 	assert(worker.global_position == destination)
 	assert(worker.sprite.is_playing())
 	assert(worker.sprite.animation == &"idle")
 	worker.sprite.set_frame_and_progress(0, 0.5)
-	worker._physics_process(0.1)
+	worker._physics_process(0.0)
 	assert(is_equal_approx(worker.sprite.frame_progress, 0.5)) # 静止时不每帧重置 Idle
 	worker.move_to(start)
 	assert(worker.sprite.flip_h)
-	worker._physics_process(10.0)
+	await PhysicsSteps.advance(worker, 10.0)
 	assert(worker.global_position == start)
 	var target: Vector2 = worker.target_position
 	gesture(game, Vector2(32, 32), Vector2(224, 32))
@@ -61,21 +64,21 @@ func _run() -> void:
 	assert(box.visible)
 	# 到达前重新指定移动目标必须取消拾取。
 	worker.move_to(worker.global_position)
-	worker._physics_process(0.1)
+	await PhysicsSteps.advance(worker, 0.1)
 	assert(not worker.carrying_box and box.visible)
 	gesture(game, click_position, click_position)
-	worker._physics_process(0.1)
+	await PhysicsSteps.advance(worker, 0.1)
 	assert(box.visible)
-	worker._physics_process(10.0)
+	await PhysicsSteps.advance(worker, 10.0)
 	assert(worker.carrying_box and not box.visible)
 	assert(worker.carried_box.visible)
 	assert(worker.sprite.animation == &"hold_idle")
 	assert(not game._box_contains(click_position))
 	worker.move_to(worker.global_position + Vector2(-80, 0))
-	worker._physics_process(0.1)
+	await PhysicsSteps.advance(worker, 0.1)
 	assert(worker.sprite.animation == &"hold_walk")
 	assert(worker.sprite.flip_h and worker.carried_box.position.x < 0)
-	worker._physics_process(10.0)
+	await PhysicsSteps.advance(worker, 10.0)
 	assert(worker.sprite.animation == &"hold_idle")
 	print("Pickup checks passed: click hit, approach, cancel, pickup, carried animations and facing.")
 	print("Worker checks passed: click, drag, bounds, movement, facing, arrival, animation.")

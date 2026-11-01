@@ -14,6 +14,9 @@ func _initialize() -> void:
 func _run() -> void:
 	game = load("res://Main.tscn").instantiate()
 	root.add_child(game)
+	# 弯道布局测试不应在工人脚下创建设施。
+	game.get_node("Worker").set_physics_process(false)
+	game.get_node("Worker").position = Vector2(736, 480)
 	game.get_node("TickTimer").stop()
 	game.set_process(false)
 	for x in game.COLS:

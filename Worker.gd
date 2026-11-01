@@ -1,4 +1,4 @@
-extends Node2D
+extends CharacterBody2D
 const GridDepth = preload("res://GridDepth.gd")
 
 @export var move_speed: float = 160.0
@@ -6,11 +6,22 @@ const GridDepth = preload("res://GridDepth.gd")
 @onready var carried_box: Sprite2D = $CarriedBox
 var target_position: Vector2
 var carrying_box: bool = false
+var operating: bool = false
 var _pickup_target: Sprite2D
 var _delivery_target: Node2D
 var pathfinder: Callable
 var _path := PackedVector2Array()
 var _path_index: int = 0
+var _moving: bool = false
+var _stuck_time: float = 0.0
+
+func cancel_navigation() -> void:
+	_path.clear()
+	_path_index = 0
+	_pickup_target = null
+	_delivery_target = null
+	target_position = global_position
+	_stuck_time = 0.0
 
 func _ready() -> void:
 	target_position = global_position
@@ -71,6 +82,25 @@ func request_pickup(box: Sprite2D) -> void:
 			_pickup_target = box
 			return
 
+func can_pickup(box: Sprite2D) -> bool:
+	if carrying_box or not is_instance_valid(box) or not box.visible or global_position.distance_to(box.global_position) > 48.0:
+		return false
+	# E 近距离拾取不能隔着设施进行；物理层 1 仅包含设施和地图边界。
+	var ray := PhysicsRayQueryParameters2D.create(global_position, box.global_position, 1)
+	return get_world_2d().direct_space_state.intersect_ray(ray).is_empty()
+
+func pickup_box(box: Sprite2D) -> bool:
+	if not can_pickup(box):
+		return false
+	cancel_navigation()
+	_face_toward(box.global_position)
+	box.hide()
+	carrying_box = true
+	carried_box.show()
+	_update_animation()
+	$PickupSound.play()
+	return true
+
 func request_delivery(machine: Node2D, approach: Vector2) -> bool:
 	if not carrying_box or not move_to(approach):
 		return false
@@ -81,32 +111,55 @@ func release_box() -> void:
 	carrying_box = false
 	carried_box.hide()
 
+func set_operating(value: bool) -> void:
+	operating = value
+	_update_animation()
+
+func _update_animation() -> void:
+	var arrived := not _moving and _path_index >= _path.size()
+	if carrying_box:
+		sprite.play("hold_idle" if arrived else "hold_walk")
+	elif operating and arrived:
+		sprite.play("interact")
+	else:
+		sprite.play("idle" if arrived else "walk")
+
 func _physics_process(delta: float) -> void:
-	var remaining := move_speed * delta
-	while _path_index < _path.size():
-		var waypoint := _path[_path_index]
-		var distance := global_position.distance_to(waypoint)
-		_face_toward(waypoint)
-		if distance > remaining:
-			global_position = global_position.move_toward(waypoint, remaining)
-			break
-		global_position = waypoint
-		remaining -= distance
-		_path_index += 1
+	var manual := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	var before := global_position
+	velocity = Vector2.ZERO
+	if not manual.is_zero_approx():
+		cancel_navigation()
+		velocity = manual * move_speed
+		_face_toward(global_position + manual)
+	elif _path_index < _path.size() and delta > 0.0:
+		var offset := _path[_path_index] - global_position
+		velocity = offset.limit_length(move_speed * delta) / delta
+		_face_toward(_path[_path_index])
+	if delta > 0.0:
+		move_and_slide()
+	_moving = global_position.distance_squared_to(before) > 0.000001
+	if not manual.is_zero_approx():
+		target_position = global_position
+	if manual.is_zero_approx() and _path_index < _path.size():
+		if global_position.distance_to(_path[_path_index]) < 0.01:
+			_path_index += 1
+			_stuck_time = 0.0
+		elif not _moving:
+			_stuck_time += delta
+			if _stuck_time > 0.4:
+				cancel_navigation()
+		else:
+			_stuck_time = 0.0
 	_update_depth()
 	var arrived := _path_index >= _path.size()
+	if arrived and manual.is_zero_approx():
+		_moving = false
 	if arrived and is_instance_valid(_delivery_target):
 		_face_toward(_delivery_target.input_position())
 		_delivery_target.accept_box(self)
 		_delivery_target = null
 	if arrived and is_instance_valid(_pickup_target):
-		if _pickup_target.visible and global_position.distance_to(_pickup_target.global_position) <= 33.0:
-			_face_toward(_pickup_target.global_position)
-			_pickup_target.hide()
-			carrying_box = true
-			carried_box.show()
+		pickup_box(_pickup_target)
 		_pickup_target = null
-	if carrying_box:
-		sprite.play("hold_idle" if arrived else "hold_walk")
-	else:
-		sprite.play("idle" if arrived else "walk")
+	_update_animation()

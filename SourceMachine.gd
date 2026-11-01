@@ -15,17 +15,24 @@ func input_position() -> Vector2:
 func delivery_position() -> Vector2:
 	return $InputBelt.to_global(Vector2(-32, 32))
 
-func accept_box(worker: Node2D) -> bool:
+func can_accept_box(worker: Node2D, require_facing: bool = true) -> bool:
 	if feeding or not worker.carrying_box:
 		return false
-	# 到达左侧格中心并转向右方后才接收，不能从上方、下方或右方投放。
-	if worker.global_position.distance_to(delivery_position()) > 0.1 or worker.sprite.flip_h:
+	# 自由移动无需精确站在格心，但仍必须位于输入带左侧格且足够靠近。
+	var point: Vector2 = $InputBelt.to_local(worker.global_position)
+	if not Rect2(-64, 0, 64, 64).has_point(point) or point.distance_to(Vector2(32, 32)) > 72.0:
+		return false
+	return not require_facing or not worker.sprite.flip_h
+
+func accept_box(worker: Node2D) -> bool:
+	if not can_accept_box(worker):
 		return false
 	worker.release_box()
 	feeding = true
 	_feed_progress = 0.0
 	$InputBox.position = Vector2(-32, 32)
 	$InputBox.show()
+	$InsertSound.play()
 	return true
 
 func _process(delta: float) -> void:
