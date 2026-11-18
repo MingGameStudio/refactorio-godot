@@ -16,7 +16,7 @@ func delivery_position() -> Vector2:
 	return $InputBelt.to_global(Vector2(-32, 32))
 
 func can_accept_box(worker: Node2D, require_facing: bool = true) -> bool:
-	if feeding or not worker.carrying_box:
+	if feeding or not worker.carrying_box or worker.carried_box_kind != "raw_material":
 		return false
 	# 自由移动无需精确站在格心，但仍必须位于输入带左侧格且足够靠近。
 	var point: Vector2 = $InputBelt.to_local(worker.global_position)

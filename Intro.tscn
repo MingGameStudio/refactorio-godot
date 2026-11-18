@@ -1,0 +1,1021 @@
+[gd_scene format=3 uid="uid://jqocehj2mies"]
+
+[ext_resource type="Texture2D" uid="uid://c3wpv5wmaqcuu" path="res://assets/Animations/FemaleCharacterIdle/FemaleCharacterIdle.png" id="assistant"]
+[ext_resource type="Script" uid="uid://x0vbuw2ie42p" path="res://AssistantFollower.gd" id="assistant_follower"]
+[ext_resource type="Texture2D" uid="uid://baf065vb38uxs" path="res://assets/TransportBelt/Belt.png" id="belt"]
+[ext_resource type="Texture2D" uid="uid://b8decopatch31" path="res://assets/FloorDecorations/patch_3_1.tres" id="crack"]
+[ext_resource type="Texture2D" uid="uid://pbie8rtf3jvx" path="res://assets/Boxes/Boxes5.png" id="five"]
+[ext_resource type="Texture2D" uid="uid://b8floorblock1" path="res://assets/FloorBlocks/floor_block_1.tres" id="floor1"]
+[ext_resource type="Texture2D" uid="uid://b8floorblock2" path="res://assets/FloorBlocks/floor_block_2.tres" id="floor2"]
+[ext_resource type="Texture2D" uid="uid://b8floorblock3" path="res://assets/FloorBlocks/floor_block_3.tres" id="floor3"]
+[ext_resource type="Texture2D" uid="uid://b8floorblock4" path="res://assets/FloorBlocks/floor_block_4.tres" id="floor4"]
+[ext_resource type="Texture2D" uid="uid://b575i43flt447" path="res://assets/UI/InteractionFrame.png" id="interaction_frame"]
+[ext_resource type="AudioStream" uid="uid://uhd5rg4sn0h2" path="res://assets/audio/dialogs/intro/IntroMusic.mp3" id="intro_music"]
+[ext_resource type="Texture2D" uid="uid://bxakah2rb17yt" path="res://assets/Boxes/Box45Degree.png" id="loose"]
+[ext_resource type="PackedScene" path="res://DialogueUI.tscn" id="opening_dialogue"]
+[ext_resource type="Script" uid="uid://dpt0vhsqxie10" path="res://Intro.gd" id="script"]
+[ext_resource type="Texture2D" uid="uid://b8decopatch21" path="res://assets/FloorDecorations/patch_2_1.tres" id="scuff"]
+[ext_resource type="Texture2D" uid="uid://cgbwg463qb0ds" path="res://assets/Boxes/Boxes6.png" id="six"]
+[ext_resource type="Texture2D" uid="uid://b8decopatch11" path="res://assets/FloorDecorations/patch_1_1.tres" id="stripe"]
+[ext_resource type="PackedScene" uid="uid://c7o0mejsbdvun" path="res://Worker.tscn" id="worker"]
+
+[sub_resource type="RectangleShape2D" id="PalletShape"]
+size = Vector2(90, 24)
+
+[sub_resource type="CircleShape2D" id="BoxShape"]
+radius = 15.0
+
+[sub_resource type="RectangleShape2D" id="HorizontalWall"]
+size = Vector2(808, 20)
+
+[sub_resource type="RectangleShape2D" id="VerticalWall"]
+size = Vector2(20, 432)
+
+[sub_resource type="RectangleShape2D" id="WorkshopTriggerShape"]
+size = Vector2(56, 104)
+
+[node name="Intro" type="Node2D" unique_id=156859599]
+script = ExtResource("script")
+
+[node name="BackgroundMusic" type="AudioStreamPlayer" parent="." unique_id=410297521]
+stream = ExtResource("intro_music")
+volume_db = -10.0
+autoplay = true
+
+[node name="FloorLayer" type="Node2D" parent="." unique_id=1462402691]
+
+[node name="Floor_0_0" type="Sprite2D" parent="FloorLayer" unique_id=888657973]
+modulate = Color(0.8, 0.8, 0.8, 1)
+scale = Vector2(0.1177502, 0.11961548)
+texture = ExtResource("floor1")
+centered = false
+
+[node name="Floor_1_0" type="Sprite2D" parent="FloorLayer" unique_id=786239768]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(64, 0)
+scale = Vector2(0.11661187, 0.12059981)
+texture = ExtResource("floor4")
+centered = false
+
+[node name="Floor_2_0" type="Sprite2D" parent="FloorLayer" unique_id=1600842933]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(128, 0)
+scale = Vector2(0.11756213, 0.12003208)
+texture = ExtResource("floor3")
+centered = false
+
+[node name="Floor_3_0" type="Sprite2D" parent="FloorLayer" unique_id=1868053818]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(192, 0)
+scale = Vector2(0.11898088, 0.120580114)
+texture = ExtResource("floor2")
+centered = false
+
+[node name="Floor_4_0" type="Sprite2D" parent="FloorLayer" unique_id=1632165010]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(256, 0)
+scale = Vector2(0.1177502, 0.11961548)
+texture = ExtResource("floor1")
+centered = false
+
+[node name="Floor_5_0" type="Sprite2D" parent="FloorLayer" unique_id=553804498]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(320, 0)
+scale = Vector2(0.11661187, 0.12059981)
+texture = ExtResource("floor4")
+centered = false
+
+[node name="Floor_6_0" type="Sprite2D" parent="FloorLayer" unique_id=1838699694]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(384, 0)
+scale = Vector2(0.11756213, 0.12003208)
+texture = ExtResource("floor3")
+centered = false
+
+[node name="Floor_7_0" type="Sprite2D" parent="FloorLayer" unique_id=414112925]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(448, 0)
+scale = Vector2(0.11898088, 0.120580114)
+texture = ExtResource("floor2")
+centered = false
+
+[node name="Floor_8_0" type="Sprite2D" parent="FloorLayer" unique_id=441622463]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(512, 0)
+scale = Vector2(0.1177502, 0.11961548)
+texture = ExtResource("floor1")
+centered = false
+
+[node name="Floor_9_0" type="Sprite2D" parent="FloorLayer" unique_id=2060742759]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(576, 0)
+scale = Vector2(0.11661187, 0.12059981)
+texture = ExtResource("floor4")
+centered = false
+
+[node name="Floor_10_0" type="Sprite2D" parent="FloorLayer" unique_id=1397733690]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(640, 0)
+scale = Vector2(0.11756213, 0.12003208)
+texture = ExtResource("floor3")
+centered = false
+
+[node name="Floor_11_0" type="Sprite2D" parent="FloorLayer" unique_id=1682020320]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(704, 0)
+scale = Vector2(0.11898088, 0.120580114)
+texture = ExtResource("floor2")
+centered = false
+
+[node name="Floor_0_1" type="Sprite2D" parent="FloorLayer" unique_id=254676928]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(0, 64)
+scale = Vector2(0.11898088, 0.120580114)
+texture = ExtResource("floor2")
+centered = false
+
+[node name="Floor_1_1" type="Sprite2D" parent="FloorLayer" unique_id=1637296055]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(64, 64)
+scale = Vector2(0.1177502, 0.11961548)
+texture = ExtResource("floor1")
+centered = false
+
+[node name="Floor_2_1" type="Sprite2D" parent="FloorLayer" unique_id=819521984]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(128, 64)
+scale = Vector2(0.11661187, 0.12059981)
+texture = ExtResource("floor4")
+centered = false
+
+[node name="Floor_3_1" type="Sprite2D" parent="FloorLayer" unique_id=1570035991]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(192, 64)
+scale = Vector2(0.11756213, 0.12003208)
+texture = ExtResource("floor3")
+centered = false
+
+[node name="Floor_4_1" type="Sprite2D" parent="FloorLayer" unique_id=1465769575]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(256, 64)
+scale = Vector2(0.11898088, 0.120580114)
+texture = ExtResource("floor2")
+centered = false
+
+[node name="Floor_5_1" type="Sprite2D" parent="FloorLayer" unique_id=1694473688]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(320, 64)
+scale = Vector2(0.1177502, 0.11961548)
+texture = ExtResource("floor1")
+centered = false
+
+[node name="Floor_6_1" type="Sprite2D" parent="FloorLayer" unique_id=1607622417]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(384, 64)
+scale = Vector2(0.11661187, 0.12059981)
+texture = ExtResource("floor4")
+centered = false
+
+[node name="Floor_7_1" type="Sprite2D" parent="FloorLayer" unique_id=1386625368]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(448, 64)
+scale = Vector2(0.11756213, 0.12003208)
+texture = ExtResource("floor3")
+centered = false
+
+[node name="Floor_8_1" type="Sprite2D" parent="FloorLayer" unique_id=871355429]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(512, 64)
+scale = Vector2(0.11898088, 0.120580114)
+texture = ExtResource("floor2")
+centered = false
+
+[node name="Floor_9_1" type="Sprite2D" parent="FloorLayer" unique_id=998990541]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(576, 64)
+scale = Vector2(0.1177502, 0.11961548)
+texture = ExtResource("floor1")
+centered = false
+
+[node name="Floor_10_1" type="Sprite2D" parent="FloorLayer" unique_id=1969705233]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(640, 64)
+scale = Vector2(0.11661187, 0.12059981)
+texture = ExtResource("floor4")
+centered = false
+
+[node name="Floor_11_1" type="Sprite2D" parent="FloorLayer" unique_id=71031330]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(704, 64)
+scale = Vector2(0.11756213, 0.12003208)
+texture = ExtResource("floor3")
+centered = false
+
+[node name="Floor_0_2" type="Sprite2D" parent="FloorLayer" unique_id=992077161]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(0, 128)
+scale = Vector2(0.11756213, 0.12003208)
+texture = ExtResource("floor3")
+centered = false
+
+[node name="Floor_1_2" type="Sprite2D" parent="FloorLayer" unique_id=905522219]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(64, 128)
+scale = Vector2(0.11898088, 0.120580114)
+texture = ExtResource("floor2")
+centered = false
+
+[node name="Floor_2_2" type="Sprite2D" parent="FloorLayer" unique_id=36097009]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(128, 128)
+scale = Vector2(0.1177502, 0.11961548)
+texture = ExtResource("floor1")
+centered = false
+
+[node name="Floor_3_2" type="Sprite2D" parent="FloorLayer" unique_id=148093003]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(192, 128)
+scale = Vector2(0.11661187, 0.12059981)
+texture = ExtResource("floor4")
+centered = false
+
+[node name="Floor_4_2" type="Sprite2D" parent="FloorLayer" unique_id=1015798967]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(256, 128)
+scale = Vector2(0.11756213, 0.12003208)
+texture = ExtResource("floor3")
+centered = false
+
+[node name="Floor_5_2" type="Sprite2D" parent="FloorLayer" unique_id=681723718]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(320, 128)
+scale = Vector2(0.11898088, 0.120580114)
+texture = ExtResource("floor2")
+centered = false
+
+[node name="Floor_6_2" type="Sprite2D" parent="FloorLayer" unique_id=735772963]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(384, 128)
+scale = Vector2(0.1177502, 0.11961548)
+texture = ExtResource("floor1")
+centered = false
+
+[node name="Floor_7_2" type="Sprite2D" parent="FloorLayer" unique_id=913530079]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(448, 128)
+scale = Vector2(0.11661187, 0.12059981)
+texture = ExtResource("floor4")
+centered = false
+
+[node name="Floor_8_2" type="Sprite2D" parent="FloorLayer" unique_id=590428622]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(512, 128)
+scale = Vector2(0.11756213, 0.12003208)
+texture = ExtResource("floor3")
+centered = false
+
+[node name="Floor_9_2" type="Sprite2D" parent="FloorLayer" unique_id=1061533006]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(576, 128)
+scale = Vector2(0.11898088, 0.120580114)
+texture = ExtResource("floor2")
+centered = false
+
+[node name="Floor_10_2" type="Sprite2D" parent="FloorLayer" unique_id=2083971702]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(640, 128)
+scale = Vector2(0.1177502, 0.11961548)
+texture = ExtResource("floor1")
+centered = false
+
+[node name="Floor_11_2" type="Sprite2D" parent="FloorLayer" unique_id=2062003223]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(704, 128)
+scale = Vector2(0.11661187, 0.12059981)
+texture = ExtResource("floor4")
+centered = false
+
+[node name="Floor_0_3" type="Sprite2D" parent="FloorLayer" unique_id=2084458891]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(0, 192)
+scale = Vector2(0.11661187, 0.12059981)
+texture = ExtResource("floor4")
+centered = false
+
+[node name="Floor_1_3" type="Sprite2D" parent="FloorLayer" unique_id=369287954]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(64, 192)
+scale = Vector2(0.11756213, 0.12003208)
+texture = ExtResource("floor3")
+centered = false
+
+[node name="Floor_2_3" type="Sprite2D" parent="FloorLayer" unique_id=225127128]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(128, 192)
+scale = Vector2(0.11898088, 0.120580114)
+texture = ExtResource("floor2")
+centered = false
+
+[node name="Floor_3_3" type="Sprite2D" parent="FloorLayer" unique_id=1743079948]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(192, 192)
+scale = Vector2(0.1177502, 0.11961548)
+texture = ExtResource("floor1")
+centered = false
+
+[node name="Floor_4_3" type="Sprite2D" parent="FloorLayer" unique_id=1051957692]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(256, 192)
+scale = Vector2(0.11661187, 0.12059981)
+texture = ExtResource("floor4")
+centered = false
+
+[node name="Floor_5_3" type="Sprite2D" parent="FloorLayer" unique_id=2055820696]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(320, 192)
+scale = Vector2(0.11756213, 0.12003208)
+texture = ExtResource("floor3")
+centered = false
+
+[node name="Floor_6_3" type="Sprite2D" parent="FloorLayer" unique_id=1539384301]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(384, 192)
+scale = Vector2(0.11898088, 0.120580114)
+texture = ExtResource("floor2")
+centered = false
+
+[node name="Floor_7_3" type="Sprite2D" parent="FloorLayer" unique_id=87403469]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(448, 192)
+scale = Vector2(0.1177502, 0.11961548)
+texture = ExtResource("floor1")
+centered = false
+
+[node name="Floor_8_3" type="Sprite2D" parent="FloorLayer" unique_id=1690597224]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(512, 192)
+scale = Vector2(0.11661187, 0.12059981)
+texture = ExtResource("floor4")
+centered = false
+
+[node name="Floor_9_3" type="Sprite2D" parent="FloorLayer" unique_id=390674027]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(576, 192)
+scale = Vector2(0.11756213, 0.12003208)
+texture = ExtResource("floor3")
+centered = false
+
+[node name="Floor_10_3" type="Sprite2D" parent="FloorLayer" unique_id=1073882649]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(640, 192)
+scale = Vector2(0.11898088, 0.120580114)
+texture = ExtResource("floor2")
+centered = false
+
+[node name="Floor_11_3" type="Sprite2D" parent="FloorLayer" unique_id=2097161969]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(704, 192)
+scale = Vector2(0.1177502, 0.11961548)
+texture = ExtResource("floor1")
+centered = false
+
+[node name="Floor_0_4" type="Sprite2D" parent="FloorLayer" unique_id=884612213]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(0, 256)
+scale = Vector2(0.1177502, 0.11961548)
+texture = ExtResource("floor1")
+centered = false
+
+[node name="Floor_1_4" type="Sprite2D" parent="FloorLayer" unique_id=495551012]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(64, 256)
+scale = Vector2(0.11661187, 0.12059981)
+texture = ExtResource("floor4")
+centered = false
+
+[node name="Floor_2_4" type="Sprite2D" parent="FloorLayer" unique_id=1474195723]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(128, 256)
+scale = Vector2(0.11756213, 0.12003208)
+texture = ExtResource("floor3")
+centered = false
+
+[node name="Floor_3_4" type="Sprite2D" parent="FloorLayer" unique_id=735174799]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(192, 256)
+scale = Vector2(0.11898088, 0.120580114)
+texture = ExtResource("floor2")
+centered = false
+
+[node name="Floor_4_4" type="Sprite2D" parent="FloorLayer" unique_id=297531436]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(256, 256)
+scale = Vector2(0.1177502, 0.11961548)
+texture = ExtResource("floor1")
+centered = false
+
+[node name="Floor_5_4" type="Sprite2D" parent="FloorLayer" unique_id=1978212416]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(320, 256)
+scale = Vector2(0.11661187, 0.12059981)
+texture = ExtResource("floor4")
+centered = false
+
+[node name="Floor_6_4" type="Sprite2D" parent="FloorLayer" unique_id=745693630]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(384, 256)
+scale = Vector2(0.11756213, 0.12003208)
+texture = ExtResource("floor3")
+centered = false
+
+[node name="Floor_7_4" type="Sprite2D" parent="FloorLayer" unique_id=1040280459]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(448, 256)
+scale = Vector2(0.11898088, 0.120580114)
+texture = ExtResource("floor2")
+centered = false
+
+[node name="Floor_8_4" type="Sprite2D" parent="FloorLayer" unique_id=635505648]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(512, 256)
+scale = Vector2(0.1177502, 0.11961548)
+texture = ExtResource("floor1")
+centered = false
+
+[node name="Floor_9_4" type="Sprite2D" parent="FloorLayer" unique_id=724375561]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(576, 256)
+scale = Vector2(0.11661187, 0.12059981)
+texture = ExtResource("floor4")
+centered = false
+
+[node name="Floor_10_4" type="Sprite2D" parent="FloorLayer" unique_id=142860014]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(640, 256)
+scale = Vector2(0.11756213, 0.12003208)
+texture = ExtResource("floor3")
+centered = false
+
+[node name="Floor_11_4" type="Sprite2D" parent="FloorLayer" unique_id=1141326764]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(704, 256)
+scale = Vector2(0.11898088, 0.120580114)
+texture = ExtResource("floor2")
+centered = false
+
+[node name="Floor_0_5" type="Sprite2D" parent="FloorLayer" unique_id=1312235362]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(0, 320)
+scale = Vector2(0.11898088, 0.120580114)
+texture = ExtResource("floor2")
+centered = false
+
+[node name="Floor_1_5" type="Sprite2D" parent="FloorLayer" unique_id=233936487]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(64, 320)
+scale = Vector2(0.1177502, 0.11961548)
+texture = ExtResource("floor1")
+centered = false
+
+[node name="Floor_2_5" type="Sprite2D" parent="FloorLayer" unique_id=442214044]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(128, 320)
+scale = Vector2(0.11661187, 0.12059981)
+texture = ExtResource("floor4")
+centered = false
+
+[node name="Floor_3_5" type="Sprite2D" parent="FloorLayer" unique_id=181115960]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(192, 320)
+scale = Vector2(0.11756213, 0.12003208)
+texture = ExtResource("floor3")
+centered = false
+
+[node name="Floor_4_5" type="Sprite2D" parent="FloorLayer" unique_id=311024775]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(256, 320)
+scale = Vector2(0.11898088, 0.120580114)
+texture = ExtResource("floor2")
+centered = false
+
+[node name="Floor_5_5" type="Sprite2D" parent="FloorLayer" unique_id=2057906451]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(320, 320)
+scale = Vector2(0.1177502, 0.11961548)
+texture = ExtResource("floor1")
+centered = false
+
+[node name="Floor_6_5" type="Sprite2D" parent="FloorLayer" unique_id=2076428789]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(384, 320)
+scale = Vector2(0.11661187, 0.12059981)
+texture = ExtResource("floor4")
+centered = false
+
+[node name="Floor_7_5" type="Sprite2D" parent="FloorLayer" unique_id=119107748]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(448, 320)
+scale = Vector2(0.11756213, 0.12003208)
+texture = ExtResource("floor3")
+centered = false
+
+[node name="Floor_8_5" type="Sprite2D" parent="FloorLayer" unique_id=2110244269]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(512, 320)
+scale = Vector2(0.11898088, 0.120580114)
+texture = ExtResource("floor2")
+centered = false
+
+[node name="Floor_9_5" type="Sprite2D" parent="FloorLayer" unique_id=1420540954]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(576, 320)
+scale = Vector2(0.1177502, 0.11961548)
+texture = ExtResource("floor1")
+centered = false
+
+[node name="Floor_10_5" type="Sprite2D" parent="FloorLayer" unique_id=375730307]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(640, 320)
+scale = Vector2(0.11661187, 0.12059981)
+texture = ExtResource("floor4")
+centered = false
+
+[node name="Floor_11_5" type="Sprite2D" parent="FloorLayer" unique_id=1989897644]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(704, 320)
+scale = Vector2(0.11756213, 0.12003208)
+texture = ExtResource("floor3")
+centered = false
+
+[node name="Floor_0_6" type="Sprite2D" parent="FloorLayer" unique_id=517155397]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(0, 384)
+scale = Vector2(0.11756213, 0.12003208)
+texture = ExtResource("floor3")
+centered = false
+
+[node name="Floor_1_6" type="Sprite2D" parent="FloorLayer" unique_id=55644054]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(64, 384)
+scale = Vector2(0.11898088, 0.120580114)
+texture = ExtResource("floor2")
+centered = false
+
+[node name="Floor_2_6" type="Sprite2D" parent="FloorLayer" unique_id=969961061]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(128, 384)
+scale = Vector2(0.1177502, 0.11961548)
+texture = ExtResource("floor1")
+centered = false
+
+[node name="Floor_3_6" type="Sprite2D" parent="FloorLayer" unique_id=1315532706]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(192, 384)
+scale = Vector2(0.11661187, 0.12059981)
+texture = ExtResource("floor4")
+centered = false
+
+[node name="Floor_4_6" type="Sprite2D" parent="FloorLayer" unique_id=1541793751]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(256, 384)
+scale = Vector2(0.11756213, 0.12003208)
+texture = ExtResource("floor3")
+centered = false
+
+[node name="Floor_5_6" type="Sprite2D" parent="FloorLayer" unique_id=1340569291]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(320, 384)
+scale = Vector2(0.11898088, 0.120580114)
+texture = ExtResource("floor2")
+centered = false
+
+[node name="Floor_6_6" type="Sprite2D" parent="FloorLayer" unique_id=235616200]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(384, 384)
+scale = Vector2(0.1177502, 0.11961548)
+texture = ExtResource("floor1")
+centered = false
+
+[node name="Floor_7_6" type="Sprite2D" parent="FloorLayer" unique_id=598184972]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(448, 384)
+scale = Vector2(0.11661187, 0.12059981)
+texture = ExtResource("floor4")
+centered = false
+
+[node name="Floor_8_6" type="Sprite2D" parent="FloorLayer" unique_id=1482508537]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(512, 384)
+scale = Vector2(0.11756213, 0.12003208)
+texture = ExtResource("floor3")
+centered = false
+
+[node name="Floor_9_6" type="Sprite2D" parent="FloorLayer" unique_id=1802891837]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(576, 384)
+scale = Vector2(0.11898088, 0.120580114)
+texture = ExtResource("floor2")
+centered = false
+
+[node name="Floor_10_6" type="Sprite2D" parent="FloorLayer" unique_id=1427568842]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(640, 384)
+scale = Vector2(0.1177502, 0.11961548)
+texture = ExtResource("floor1")
+centered = false
+
+[node name="Floor_11_6" type="Sprite2D" parent="FloorLayer" unique_id=968305754]
+modulate = Color(0.8, 0.8, 0.8, 1)
+position = Vector2(704, 384)
+scale = Vector2(0.11661187, 0.12059981)
+texture = ExtResource("floor4")
+centered = false
+
+[node name="DecorationLayer" type="Node2D" parent="." unique_id=2139169674]
+
+[node name="ScuffTop" type="Sprite2D" parent="DecorationLayer" unique_id=1018326741]
+position = Vector2(220, 54)
+scale = Vector2(0.12, 0.12)
+texture = ExtResource("scuff")
+
+[node name="CrackTop" type="Sprite2D" parent="DecorationLayer" unique_id=1550522204]
+position = Vector2(650, 58)
+scale = Vector2(0.11, 0.11)
+texture = ExtResource("crack")
+
+[node name="ScuffBottom" type="Sprite2D" parent="DecorationLayer" unique_id=919641145]
+position = Vector2(87, 365)
+scale = Vector2(0.12, 0.12)
+texture = ExtResource("scuff")
+
+[node name="CrackBottom" type="Sprite2D" parent="DecorationLayer" unique_id=1317040992]
+position = Vector2(478, 397)
+scale = Vector2(0.1, 0.1)
+texture = ExtResource("crack")
+
+[node name="TopSafety0" type="Sprite2D" parent="DecorationLayer" unique_id=1880396964]
+position = Vector2(96, 10)
+scale = Vector2(0.245, 0.115)
+texture = ExtResource("stripe")
+
+[node name="TopSafety1" type="Sprite2D" parent="DecorationLayer" unique_id=1725987211]
+position = Vector2(288, 10)
+scale = Vector2(0.245, 0.115)
+texture = ExtResource("stripe")
+
+[node name="TopSafety2" type="Sprite2D" parent="DecorationLayer" unique_id=623174772]
+position = Vector2(480, 10)
+scale = Vector2(0.245, 0.115)
+texture = ExtResource("stripe")
+
+[node name="TopSafety3" type="Sprite2D" parent="DecorationLayer" unique_id=2092282572]
+position = Vector2(672, 10)
+scale = Vector2(0.245, 0.115)
+texture = ExtResource("stripe")
+
+[node name="BottomSafety0" type="Sprite2D" parent="DecorationLayer" unique_id=911981504]
+position = Vector2(96, 422)
+scale = Vector2(0.245, 0.115)
+texture = ExtResource("stripe")
+
+[node name="BottomSafety1" type="Sprite2D" parent="DecorationLayer" unique_id=1571733304]
+position = Vector2(288, 422)
+scale = Vector2(0.245, 0.115)
+texture = ExtResource("stripe")
+
+[node name="BottomSafety2" type="Sprite2D" parent="DecorationLayer" unique_id=636029546]
+position = Vector2(480, 422)
+scale = Vector2(0.245, 0.115)
+texture = ExtResource("stripe")
+
+[node name="BottomSafety3" type="Sprite2D" parent="DecorationLayer" unique_id=870960042]
+position = Vector2(672, 422)
+scale = Vector2(0.245, 0.115)
+texture = ExtResource("stripe")
+
+[node name="Walkway" type="Node2D" parent="." unique_id=84636350]
+
+[node name="ArrowLane0" type="Sprite2D" parent="Walkway" unique_id=735707343]
+position = Vector2(0, 204)
+scale = Vector2(0.14190687, 0.14190687)
+texture = ExtResource("belt")
+centered = false
+
+[node name="ArrowLane1" type="Sprite2D" parent="Walkway" unique_id=1077568859]
+position = Vector2(64, 204)
+scale = Vector2(0.14190687, 0.14190687)
+texture = ExtResource("belt")
+centered = false
+
+[node name="ArrowLane2" type="Sprite2D" parent="Walkway" unique_id=1881048946]
+position = Vector2(128, 204)
+scale = Vector2(0.14190687, 0.14190687)
+texture = ExtResource("belt")
+centered = false
+
+[node name="ArrowLane3" type="Sprite2D" parent="Walkway" unique_id=2036348865]
+position = Vector2(192, 204)
+scale = Vector2(0.14190687, 0.14190687)
+texture = ExtResource("belt")
+centered = false
+
+[node name="ArrowLane4" type="Sprite2D" parent="Walkway" unique_id=762180817]
+position = Vector2(256, 204)
+scale = Vector2(0.14190687, 0.14190687)
+texture = ExtResource("belt")
+centered = false
+
+[node name="ArrowLane5" type="Sprite2D" parent="Walkway" unique_id=860352321]
+position = Vector2(320, 204)
+scale = Vector2(0.14190687, 0.14190687)
+texture = ExtResource("belt")
+centered = false
+
+[node name="ArrowLane6" type="Sprite2D" parent="Walkway" unique_id=1348972222]
+position = Vector2(384, 204)
+scale = Vector2(0.14190687, 0.14190687)
+texture = ExtResource("belt")
+centered = false
+
+[node name="ArrowLane7" type="Sprite2D" parent="Walkway" unique_id=267180165]
+position = Vector2(448, 204)
+scale = Vector2(0.14190687, 0.14190687)
+texture = ExtResource("belt")
+centered = false
+
+[node name="ArrowLane8" type="Sprite2D" parent="Walkway" unique_id=1467597730]
+position = Vector2(512, 204)
+scale = Vector2(0.14190687, 0.14190687)
+texture = ExtResource("belt")
+centered = false
+
+[node name="ArrowLane9" type="Sprite2D" parent="Walkway" unique_id=1871382080]
+position = Vector2(576, 204)
+scale = Vector2(0.14190687, 0.14190687)
+texture = ExtResource("belt")
+centered = false
+
+[node name="ArrowLane10" type="Sprite2D" parent="Walkway" unique_id=1040645918]
+position = Vector2(640, 204)
+scale = Vector2(0.14190687, 0.14190687)
+texture = ExtResource("belt")
+centered = false
+
+[node name="ArrowLane11" type="Sprite2D" parent="Walkway" unique_id=549324341]
+position = Vector2(704, 204)
+scale = Vector2(0.14190687, 0.14190687)
+texture = ExtResource("belt")
+centered = false
+
+[node name="Cargo" type="Node2D" parent="." unique_id=418486449]
+
+[node name="UpperPallet1" type="StaticBody2D" parent="Cargo" unique_id=229057033]
+z_index = 19
+position = Vector2(160, 156)
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Cargo/UpperPallet1" unique_id=1561461867]
+scale = Vector2(0.14035088, 0.14035088)
+texture = ExtResource("six")
+centered = false
+offset = Vector2(-342, -506)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Cargo/UpperPallet1" unique_id=1958476233]
+position = Vector2(0, -12)
+shape = SubResource("PalletShape")
+
+[node name="UpperPallet2" type="StaticBody2D" parent="Cargo" unique_id=139799636]
+z_index = 19
+position = Vector2(292, 156)
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Cargo/UpperPallet2" unique_id=196838610]
+scale = Vector2(0.14035088, 0.14035088)
+texture = ExtResource("six")
+centered = false
+offset = Vector2(-342, -506)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Cargo/UpperPallet2" unique_id=633138698]
+position = Vector2(0, -12)
+shape = SubResource("PalletShape")
+
+[node name="UpperPallet3" type="StaticBody2D" parent="Cargo" unique_id=1421699260]
+z_index = 19
+position = Vector2(424, 156)
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Cargo/UpperPallet3" unique_id=1488679567]
+scale = Vector2(0.14076246, 0.14076246)
+texture = ExtResource("five")
+centered = false
+offset = Vector2(-341, -506)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Cargo/UpperPallet3" unique_id=1329958197]
+position = Vector2(0, -12)
+shape = SubResource("PalletShape")
+
+[node name="ReturnPoint" type="Marker2D" parent="Cargo/UpperPallet3" unique_id=1708855537]
+position = Vector2(32, 0)
+
+[node name="UpperPallet4" type="StaticBody2D" parent="Cargo" unique_id=1708718519]
+z_index = 19
+position = Vector2(556, 156)
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Cargo/UpperPallet4" unique_id=1937696883]
+scale = Vector2(0.14035088, 0.14035088)
+texture = ExtResource("six")
+centered = false
+offset = Vector2(-342, -506)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Cargo/UpperPallet4" unique_id=1658776806]
+position = Vector2(0, -12)
+shape = SubResource("PalletShape")
+
+[node name="UpperPallet5" type="StaticBody2D" parent="Cargo" unique_id=621681413]
+z_index = 19
+position = Vector2(688, 156)
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Cargo/UpperPallet5" unique_id=592083697]
+scale = Vector2(0.14035088, 0.14035088)
+texture = ExtResource("six")
+centered = false
+offset = Vector2(-342, -506)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Cargo/UpperPallet5" unique_id=302168095]
+position = Vector2(0, -12)
+shape = SubResource("PalletShape")
+
+[node name="LowerPallet1" type="StaticBody2D" parent="Cargo" unique_id=1982039194]
+z_index = 31
+position = Vector2(160, 360)
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Cargo/LowerPallet1" unique_id=1146802835]
+scale = Vector2(0.14035088, 0.14035088)
+texture = ExtResource("six")
+centered = false
+offset = Vector2(-342, -506)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Cargo/LowerPallet1" unique_id=262154004]
+position = Vector2(0, -12)
+shape = SubResource("PalletShape")
+
+[node name="LowerPallet2" type="StaticBody2D" parent="Cargo" unique_id=11260368]
+z_index = 31
+position = Vector2(292, 360)
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Cargo/LowerPallet2" unique_id=115058863]
+scale = Vector2(0.14035088, 0.14035088)
+texture = ExtResource("six")
+centered = false
+offset = Vector2(-342, -506)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Cargo/LowerPallet2" unique_id=1850438403]
+position = Vector2(0, -12)
+shape = SubResource("PalletShape")
+
+[node name="LowerPallet3" type="StaticBody2D" parent="Cargo" unique_id=380891487]
+z_index = 31
+position = Vector2(424, 360)
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Cargo/LowerPallet3" unique_id=884765347]
+scale = Vector2(0.14035088, 0.14035088)
+texture = ExtResource("six")
+centered = false
+offset = Vector2(-342, -506)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Cargo/LowerPallet3" unique_id=48623217]
+position = Vector2(0, -12)
+shape = SubResource("PalletShape")
+
+[node name="LowerPallet4" type="StaticBody2D" parent="Cargo" unique_id=444762105]
+z_index = 31
+position = Vector2(556, 360)
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Cargo/LowerPallet4" unique_id=1080233697]
+scale = Vector2(0.14035088, 0.14035088)
+texture = ExtResource("six")
+centered = false
+offset = Vector2(-342, -506)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Cargo/LowerPallet4" unique_id=1051786313]
+position = Vector2(0, -12)
+shape = SubResource("PalletShape")
+
+[node name="LowerPallet5" type="StaticBody2D" parent="Cargo" unique_id=1334192994]
+z_index = 31
+position = Vector2(688, 360)
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Cargo/LowerPallet5" unique_id=81534232]
+scale = Vector2(0.14035088, 0.14035088)
+texture = ExtResource("six")
+centered = false
+offset = Vector2(-342, -506)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Cargo/LowerPallet5" unique_id=711882176]
+position = Vector2(0, -12)
+shape = SubResource("PalletShape")
+
+[node name="LooseBox" type="StaticBody2D" parent="Cargo" unique_id=83102918]
+z_index = 27
+position = Vector2(520, 274)
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Cargo/LooseBox" unique_id=403627045]
+position = Vector2(0, -20)
+scale = Vector2(0.09, 0.09)
+texture = ExtResource("loose")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Cargo/LooseBox" unique_id=917756310]
+position = Vector2(0, -10)
+shape = SubResource("BoxShape")
+
+[node name="FemaleAssistant" type="Sprite2D" parent="." unique_id=137241932]
+z_index = 24
+position = Vector2(193.00002, 228)
+scale = Vector2(0.15517241, 0.15517241)
+texture = ExtResource("assistant")
+centered = false
+offset = Vector2(-113, -462)
+script = ExtResource("assistant_follower")
+
+[node name="Worker" parent="." unique_id=1416988142 instance=ExtResource("worker")]
+position = Vector2(292, 228.88)
+
+[node name="InteractionFrame" type="Sprite2D" parent="." unique_id=824538087]
+visible = false
+z_index = 100
+texture = ExtResource("interaction_frame")
+
+[node name="UI" type="CanvasLayer" parent="." unique_id=1612619926]
+
+[node name="PickupHint" type="Label" parent="UI" unique_id=1808390341]
+visible = false
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 200.0
+offset_bottom = 48.0
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 22
+text = "E 拾取箱子"
+
+[node name="MovementHint" type="Label" parent="UI" unique_id=692674127]
+visible = false
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -48.0
+offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 22
+text = "按 WASD 向右移动，前往生产车间。"
+horizontal_alignment = 1
+
+[node name="DialogueUI" parent="." unique_id=1008459196 instance=ExtResource("opening_dialogue")]
+mouse_advance_enabled = true
+
+[node name="RoomBounds" type="StaticBody2D" parent="." unique_id=2110475524]
+collision_mask = 0
+
+[node name="Top" type="CollisionShape2D" parent="RoomBounds" unique_id=777172109]
+position = Vector2(384, -10)
+shape = SubResource("HorizontalWall")
+
+[node name="Bottom" type="CollisionShape2D" parent="RoomBounds" unique_id=1574511779]
+position = Vector2(384, 442)
+shape = SubResource("HorizontalWall")
+
+[node name="Left" type="CollisionShape2D" parent="RoomBounds" unique_id=1068828294]
+position = Vector2(-10, 216)
+shape = SubResource("VerticalWall")
+
+[node name="Right" type="CollisionShape2D" parent="RoomBounds" unique_id=1964208109]
+position = Vector2(778, 216)
+shape = SubResource("VerticalWall")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1255332754]
+position = Vector2(384, 216)
+
+[node name="WorkshopEntrance" type="Area2D" parent="." unique_id=90229167]
+position = Vector2(740, 224)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WorkshopEntrance" unique_id=1020346216]
+shape = SubResource("WorkshopTriggerShape")
+
+[connection signal="finished" from="BackgroundMusic" to="BackgroundMusic" method="play"]

@@ -35,6 +35,8 @@ func _run() -> void:
 	for i in 20:
 		game._on_tick()
 	check(game.items.is_empty() and machine.capacity == 0, "Empty machine cannot produce")
+	# 本测试需要从远处搬箱，才能覆盖投料寻路中途取消与堵塞。
+	game.get_node("Box").position = Vector2(544, 224)
 	worker.request_pickup(game.get_node("Box"))
 	await PhysicsSteps.advance(worker, 10.0)
 	check(worker.carrying_box, "Box picked up")
@@ -88,9 +90,13 @@ func _run() -> void:
 	game.items.clear()
 	game._on_tick()
 	check(machine.capacity == 9 and game.items.size() == 1, "Production consumes one")
+	var received := 0
 	for i in 60:
+		for item in game.items:
+			if item.pos == game.SINK_POS:
+				received += 1
 		game._on_tick()
-	check(machine.capacity == 0 and game.score == 10 and game.items.is_empty(), "Exactly ten cells produced")
+	check(machine.capacity == 0 and received == 10 and game.score == 0 and game.items.is_empty(), "Exactly ten cells produced without loose-item scoring")
 	check(machine.get_node("CapacityLabel").text == "0", "Display shows zero")
 	game.queue_free()
 	await process_frame

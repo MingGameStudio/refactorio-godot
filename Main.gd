@@ -1,5 +1,9 @@
 extends Node2D
 
+## 临时测试入口；正式接入 TutorialManager 时可关闭。
+@export var dialogue_test_enabled: bool = true
+@onready var dialogue_ui: CanvasLayer = $DialogueUI
+
 # ============================================================
 # 2D 网格工厂原型 — Scene/Node 工作流版本
 # 地板/建筑/装饰均为场景节点；物品/悬停由专用 Layer 脚本绘制
@@ -26,6 +30,9 @@ var SOURCE_POS := Vector2i(-1, -1)
 var SINK_POS := Vector2i(-1, -1)
 const PlacedBuilding = preload("res://PlacedBuilding.gd")
 var _source_machine: Node2D
+var _packing_machine: Node2D
+var packed_boxes: Array[Sprite2D] = []
+const PACKED_BOX = preload("res://PackedBox.gd")
 var _input_cell := Vector2i(-1, -1)
 
 # --- 场景节点引用（@onready 在 _ready 之前由引擎赋值） ---
@@ -92,6 +99,8 @@ var _drag_path: Array = []  # 当前预览路径：元素为 {pos, dir}
 # ============================================================
 
 func _ready() -> void:
+	dialogue_ui.active_changed.connect(_on_dialogue_active_changed)
+	get_viewport().size_changed.connect(_fit_camera_to_window)
 	# 地板/装饰纹理由场景节点自带，无需运行时加载
 
 	# 修正绘制层级：场景中 BuildingLayer 位于 DecorationLayer 之前，
@@ -124,6 +133,11 @@ func _ready() -> void:
 	grid_collision.configure(Vector2i(COLS, ROWS), CELL)
 	occupancy.changed.connect(_sync_navigation)
 	_init_grid()
+	$WorkshopWalls.grid_size = Vector2i(COLS, ROWS)
+	$WorkshopWalls.cell_size = CELL
+	$WorkshopWalls.inlet_row = _input_cell.y
+	$WorkshopWalls.outlet_row = SINK_POS.y
+	_fit_camera_to_window()
 	welding_interaction = WeldingInteraction.new()
 	welding_interaction.game = self
 	welding_interaction.worker = _worker
@@ -138,6 +152,16 @@ func _ready() -> void:
 
 	# Timer 已是场景节点，连接信号
 	_tick_timer.timeout.connect(_on_tick)
+
+func _fit_camera_to_window() -> void:
+	var viewport_size := get_viewport_rect().size
+	var bounds: Rect2 = $WorkshopWalls.visual_bounds()
+	if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
+		return
+	# 在完整显示墙体与地板的前提下尽量放大；底部贴齐窗口，不留底边。
+	var fit_scale := minf(viewport_size.x / bounds.size.x, viewport_size.y / bounds.size.y)
+	$Camera2D.position = Vector2(bounds.get_center().x, bounds.end.y - viewport_size.y / fit_scale * 0.5)
+	$Camera2D.zoom = Vector2.ONE * fit_scale
 
 # 保证绘制层级顺序：Floor -> Decoration -> Building -> GridOverlay -> ItemLayer
 # 场景文件中 BuildingLayer 位于 DecorationLayer 之前，会让装饰纹理盖住传送带，
@@ -164,6 +188,7 @@ func _init_grid() -> void:
 	SOURCE_POS = Vector2i(-1, -1)
 	SINK_POS = Vector2i(-1, -1)
 	_source_machine = null
+	_packing_machine = null
 	_input_cell = Vector2i(-1, -1)
 	# 场景节点是初始布局的唯一来源；保留节点及其机器外观。
 	for node in _building_layer.get_children():
@@ -184,6 +209,8 @@ func _init_grid() -> void:
 				_source_machine = node
 			elif type == Building.SINK:
 				SINK_POS = pos
+				if node.has_method("try_pack"):
+					_packing_machine = node
 
 	if is_instance_valid(_source_machine) and _source_machine.has_node("InputBelt"):
 		var input: Node2D = _source_machine.get_node("InputBelt")
@@ -276,7 +303,7 @@ func _set_building(pos: Vector2i, type: int, dir: int = Dir.RIGHT) -> void:
 		return
 	if buildings[pos.x][pos.y].type == Building.INPUT:
 		return
-	if type != Building.EMPTY and _cell_overlaps_worker(pos):
+	if type != Building.EMPTY and (_cell_overlaps_worker(pos) or _has_box_at(pos)):
 		return
 	var old: Dictionary = buildings[pos.x][pos.y]
 	if old.type == Building.WELDER and not old.node.can_remove():
@@ -628,6 +655,9 @@ func _process(delta: float) -> void:
 	_item_layer.queue_redraw()
 
 	# 更新 HUD 文本
+	_update_score_label()
+
+func _update_score_label() -> void:
 	_score_label.text = "得分: %d   物品数: %d" % [score, items.size()]
 
 # ============================================================
@@ -754,7 +784,18 @@ func _mouse_quadrant_horizontal_first(start: Vector2i, end: Vector2i, mouse_worl
 # ============================================================
 
 func _input(event: InputEvent) -> void:
+	if _worker.dialogue_locked:
+		return
+	if dialogue_test_enabled and event is InputEventKey and event.pressed and not event.echo \
+			and event.physical_keycode == KEY_T:
+		play_test_dialogue()
+		get_viewport().set_input_as_handled()
+		return
 	if event is InputEventKey and event.pressed and not event.echo:
+		if event.physical_keycode == KEY_Q:
+			drop_carried_box()
+			get_viewport().set_input_as_handled()
+			return
 		var cell := world_to_cell(get_global_mouse_position())
 		if event.physical_keycode == KEY_ESCAPE:
 			_moving_welder = null
@@ -772,6 +813,15 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed:
 		var cell := world_to_cell(get_global_mouse_position())
 		if cell.x < 0:
+			# 地图外仅允许点击入料口箱子；仍不允许铺带、拆除或行走。
+			if event.button_index == MOUSE_BUTTON_LEFT and not is_instance_valid(_moving_welder) \
+					and _box_contains(get_global_mouse_position()) and _box.is_port_pickup():
+				_press_world = get_global_mouse_position()
+				_pointer_dragged = false
+				_drag_can_build = false
+				_drag_active = true
+				_drag_start = cell
+				_drag_path = []
 			return
 		var b: Dictionary = buildings[cell.x][cell.y]
 
@@ -809,6 +859,24 @@ func _input(event: InputEvent) -> void:
 	elif event is InputEventMouseMotion and _drag_active:
 		_update_left_gesture(get_global_mouse_position())
 
+func play_test_dialogue() -> void:
+	dialogue_ui.start_dialogue([
+		{"name": "徐知夏", "job_title": "厂长助理", "text": "厂长，我是您的助理徐知夏。我的任务是帮助您尽快熟悉生产线。"},
+		{"name": "徐知夏", "job_title": "厂长助理", "text": "刚好现在有一个小订单——5个电池组，让我带您走一遍流程。"},
+	])
+
+func _on_dialogue_active_changed(active: bool) -> void:
+	_worker.set_dialogue_locked(active)
+	if not active:
+		return
+	welding_interaction.cancel_for_dialogue()
+	_drag_active = false
+	_drag_path.clear()
+	_grid_overlay.preview_path = []
+	_grid_overlay.queue_redraw()
+	_moving_welder = null
+	$UI/HintLabel.text = _default_hint
+
 # 一旦发生拖动，回到起点也不再作为点击移动处理。
 func _update_left_gesture(world: Vector2) -> void:
 	var cell := world_to_cell(world)
@@ -821,17 +889,117 @@ func _update_left_gesture(world: Vector2) -> void:
 	_grid_overlay.queue_redraw()
 
 func _box_contains(world: Vector2) -> bool:
-	return _box.visible and _box.get_rect().has_point(_box.to_local(world))
+	return box_at_pointer(world) != null
+
+func get_pickup_boxes() -> Array[Sprite2D]:
+	var result: Array[Sprite2D] = [_box]
+	for box in packed_boxes:
+		if is_instance_valid(box):
+			result.append(box)
+	return result
+
+func box_at_pointer(world: Vector2) -> Sprite2D:
+	for box in get_pickup_boxes():
+		if box.visible and box.get_rect().has_point(box.to_local(world)):
+			return box
+	return null
+
+func nearest_pickup_box() -> Sprite2D:
+	var nearest: Sprite2D
+	var distance := INF
+	for box in get_pickup_boxes():
+		var candidate_distance := _worker.global_position.distance_to(box.global_position)
+		if candidate_distance < distance and _worker.can_pickup(box):
+			nearest = box
+			distance = candidate_distance
+	return nearest
+
+func _has_box_at(cell: Vector2i) -> bool:
+	for box in get_pickup_boxes():
+		if box.visible and world_to_cell(box.global_position) == cell:
+			return true
+	return false
+
+func spawn_packed_box(cell: Vector2i) -> bool:
+	if not _in_bounds(cell) or buildings[cell.x][cell.y].type != Building.BELT \
+			or _has_item_at(cell) or _has_box_at(cell) or _cell_overlaps_worker(cell):
+		return false
+	var box := Sprite2D.new()
+	box.set_script(PACKED_BOX)
+	box.name = "PackedBox"
+	box.texture = _box.texture
+	box.scale = _box.scale
+	box.offset = _box.offset
+	box.texture_filter = _box.texture_filter
+	box.position = (Vector2(cell) + Vector2.ONE * 0.5) * CELL
+	box.z_index = GridDepth.at_position(box.position, GridDepth.BOX)
+	box.set_meta("box_kind", "battery_crate")
+	box.set_meta("battery_count", 5)
+	add_child(box)
+	packed_boxes.append(box)
+	return true
+
+func drop_carried_box() -> bool:
+	if _worker.dialogue_locked or not _worker.carrying_box or not is_instance_valid(_worker.carried_box_node):
+		return false
+	if is_at_shipping_port():
+		return _ship_carried_box()
+	var cell := world_to_cell(_worker.global_position) + (Vector2i.LEFT if _worker.sprite.flip_h else Vector2i.RIGHT)
+	if not _in_bounds(cell) or _has_item_at(cell) or _has_box_at(cell) or _cell_overlaps_worker(cell):
+		return false
+	var type: int = buildings[cell.x][cell.y].type
+	if type != Building.EMPTY and not (type == Building.BELT and cell == SINK_POS + Vector2i.RIGHT):
+		return false
+	# 不允许从设施另一侧放下；只使用面前相邻格。
+	var box: Sprite2D = _worker.carried_box_node
+	box.global_position = to_global((Vector2(cell) + Vector2.ONE * 0.5) * CELL)
+	box.z_index = GridDepth.at_position(to_local(box.global_position), GridDepth.BOX)
+	box.show()
+	_worker.release_box()
+	_worker.cancel_navigation()
+	_worker._update_animation()
+	return true
+
+func is_at_shipping_port() -> bool:
+	var approach: Node2D = $WorkshopWalls/OutletApproach
+	var cell := world_to_cell(approach.global_position)
+	return not _worker.sprite.flip_h and world_to_cell(_worker.global_position) == cell \
+		and is_cell_walkable(cell)
+
+func can_ship_carried_box() -> bool:
+	var box: Sprite2D = _worker.carried_box_node
+	# 注册表证明来自本车间装箱机，不能仅凭外观或类型标签计分。
+	return not _worker.dialogue_locked and _worker.carrying_box and is_at_shipping_port() \
+		and is_instance_valid(box) and not box.is_queued_for_deletion() \
+		and packed_boxes.has(box) and box.get_script() == PACKED_BOX \
+		and _worker.carried_box_kind == "battery_crate" \
+		and box.get_meta("box_kind", "") == "battery_crate" and box.get_meta("battery_count", 0) == 5
+
+func _ship_carried_box() -> bool:
+	if not can_ship_carried_box():
+		return false
+	var box: Sprite2D = _worker.carried_box_node
+	# 先撤销持箱和注册状态，再移除节点；同一帧重复交付也不能重复计分。
+	packed_boxes.erase(box)
+	_worker.release_box()
+	_worker.cancel_navigation()
+	_worker._update_animation()
+	box.get_parent().remove_child(box)
+	box.queue_free()
+	score += 1
+	$ShipmentSound.play()
+	_update_score_label()
+	return true
 
 func _finish_left_gesture(world: Vector2) -> void:
 	_update_left_gesture(world)
 	if _drag_path.size() > 1:
 		_place_belt_path(_drag_path)
+	elif not _pointer_dragged and _box_contains(world):
+		_worker.request_pickup(box_at_pointer(world))
 	elif not _pointer_dragged and _in_bounds(world_to_cell(world)):
 		if world_to_cell(world) == _input_cell:
 			_request_box_delivery()
-		elif _box_contains(world):
-			_worker.request_pickup(_box)
 		else:
 			var cell := world_to_cell(world)
 			if is_cell_walkable(cell):
@@ -855,7 +1023,7 @@ func _place_belt_path(path: Array) -> void:
 		var dir: int = entry["dir"]
 		if not _in_bounds(pos):
 			continue
-		if _cell_overlaps_worker(pos):
+		if _cell_overlaps_worker(pos) or _has_box_at(pos):
 			continue
 		var b: Dictionary = buildings[pos.x][pos.y]
 		if b.type in [Building.SOURCE, Building.SINK, Building.INPUT, Building.WELDER]:
@@ -912,8 +1080,12 @@ func _on_tick() -> void:
 		var b: Dictionary = buildings[cur.x][cur.y]
 
 		if cur == SINK_POS:
-			score += 1
-			$ShipmentSound.play()
+			if item.get("kind", "cell") == "battery_set" and is_instance_valid(_packing_machine):
+				if not _packing_machine.accept_battery():
+					item.prev_pos = cur
+					item.progress = 1.0
+					blocked.append(item)
+					continue
 			continue
 
 		var dir: int = -1
@@ -942,7 +1114,7 @@ func _on_tick() -> void:
 					if nb.node.accept_cell():
 						occupied.erase(_key(cur))
 						continue
-				if (nb.type == Building.BELT or nb.type == Building.EMPTY) and not occupied.has(_key(next_pos)):
+				if (nb.type == Building.BELT or nb.type == Building.EMPTY) and not occupied.has(_key(next_pos)) and not _has_box_at(next_pos):
 					occupied.erase(_key(cur))
 					occupied[_key(next_pos)] = true
 					item.prev_pos = cur
@@ -962,9 +1134,11 @@ func _on_tick() -> void:
 			continue
 		var machine_cell := world_to_cell(machine.global_position)
 		var output := machine_cell + Vector2i.RIGHT
-		if _in_bounds(output) and buildings[output.x][output.y].type == Building.BELT and not _has_item_at(output):
+		if _in_bounds(output) and buildings[output.x][output.y].type == Building.BELT and not _has_item_at(output) and not _has_box_at(output):
 			items.append({"kind": "battery_set", "pos": output, "prev_pos": machine_cell, "progress": 0.0})
 			machine.confirm_output()
+	if is_instance_valid(_packing_machine):
+		_packing_machine.try_pack(self)
 	# ItemLayer 需要拿到最新数组引用
 	_item_layer.items = items
 	_item_layer.queue_redraw()
@@ -980,7 +1154,7 @@ func get_welding_machines() -> Array:
 func move_welder(machine: Node2D, destination: Vector2i) -> bool:
 	if not is_instance_valid(machine) or not _in_bounds(destination):
 		return false
-	if buildings[destination.x][destination.y].type != Building.EMPTY or _has_item_at(destination) \
+	if buildings[destination.x][destination.y].type != Building.EMPTY or _has_item_at(destination) or _has_box_at(destination) \
 			or _cell_overlaps_worker(destination):
 		return false
 	var previous := world_to_cell(machine.global_position)

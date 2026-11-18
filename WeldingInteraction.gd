@@ -52,6 +52,8 @@ func is_near(machine: Node2D) -> bool:
 	return worker.global_position.distance_to(machine.to_global(Vector2(32, 32))) <= 68.0
 
 func _physics_process(delta: float) -> void:
+	if worker.dialogue_locked:
+		return
 	if is_instance_valid(active):
 		active.advance_operation(delta, worker, is_near(active))
 		if not active.processing:
@@ -65,15 +67,21 @@ func _physics_process(delta: float) -> void:
 		if distance <= 68.0 and distance < nearest:
 			nearest = distance
 			focused = machine
-	var box_ready: bool = not is_instance_valid(active) and worker.can_pickup(game._box)
+	var pickup_box: Sprite2D = game.nearest_pickup_box()
+	var box_ready: bool = not is_instance_valid(active) and pickup_box != null
 	var delivery_ready: bool = not is_instance_valid(active) and worker.carrying_box and _can_deliver()
 	_hint.text = "E 投料" if delivery_ready else ("E 拾取箱子" if box_ready else "")
+	if worker.carrying_box and not delivery_ready:
+		if game.is_at_shipping_port():
+			_hint.text = "Q 发货（+1）" if game.can_ship_carried_box() else "出货口仅接收装箱机生成的成品箱"
+		else:
+			_hint.text += "  Q 放下箱子（面前空格）"
 	_frame.hide()
 	# 与 E 的执行优先级一致，同一时刻只标记实际将响应的目标。
 	if delivery_ready:
 		_show_frame(game._source_machine.get_node("InputBelt"), Rect2(0, 0, 64, 64))
 	elif box_ready:
-		_show_frame(game._box, game._box.get_rect())
+		_show_frame(pickup_box, pickup_box.get_rect())
 	elif not is_instance_valid(active) and is_instance_valid(focused) and not worker.carrying_box and focused.can_begin_operation(worker):
 		var sprite: Sprite2D = focused.get_node("Sprite2D")
 		_show_frame(sprite, sprite.get_rect())
@@ -81,6 +89,8 @@ func _physics_process(delta: float) -> void:
 		focused.get_node("Prompt").show()
 
 func operate() -> bool:
+	if worker.dialogue_locked:
+		return false
 	_physics_process(0.0)
 	if is_instance_valid(active):
 		return false
@@ -94,7 +104,7 @@ func operate() -> bool:
 			_physics_process(0.0)
 			return true
 		return false
-	if worker.pickup_box(game._box):
+	if worker.pickup_box(game.nearest_pickup_box()):
 		_physics_process(0.0)
 		return true
 	if not is_instance_valid(focused):
@@ -108,6 +118,8 @@ func operate() -> bool:
 	return false
 
 func _unhandled_key_input(event: InputEvent) -> void:
+	if worker.dialogue_locked:
+		return
 	if not event is InputEventKey or event.physical_keycode != KEY_E:
 		return
 	if event.pressed and not event.echo:
@@ -123,3 +135,14 @@ func _notification(what: int) -> void:
 		active.cancel_operation()
 		active = null
 		worker.set_operating(false)
+
+func cancel_for_dialogue() -> void:
+	if is_instance_valid(active):
+		active.cancel_operation()
+	active = null
+	focused = null
+	worker.set_operating(false)
+	_hint.text = ""
+	_frame.hide()
+	for machine in game.get_welding_machines():
+		machine.get_node("Prompt").hide()

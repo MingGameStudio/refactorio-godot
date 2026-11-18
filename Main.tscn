@@ -12,10 +12,9 @@
 [ext_resource type="Texture2D" uid="uid://b8decopatch21" path="res://assets/FloorDecorations/patch_2_1.tres" id="11_d4"]
 [ext_resource type="Texture2D" uid="uid://b8decopatch22" path="res://assets/FloorDecorations/patch_2_2.tres" id="12_d5"]
 [ext_resource type="Texture2D" uid="uid://b8decopatch23" path="res://assets/FloorDecorations/patch_2_3.tres" id="13_d6"]
-[ext_resource type="Texture2D" uid="uid://b8decopatch31" path="res://assets/FloorDecorations/patch_3_1.tres" id="14_d7"]
 [ext_resource type="Texture2D" uid="uid://b8decopatch32" path="res://assets/FloorDecorations/patch_3_2.tres" id="15_d8"]
 [ext_resource type="PackedScene" uid="uid://c7o0mejsbdvun" path="res://Worker.tscn" id="16_worker"]
-[ext_resource type="Texture2D" uid="uid://btwe2p2kiptu" path="res://assets/Box.png" id="17_box"]
+[ext_resource type="Texture2D" uid="uid://cvqm53bongy65" path="res://assets/Boxes/BoxFront.png" id="17_box"]
 [ext_resource type="Script" uid="uid://blnuurmwjo0uv" path="res://PlacedBuilding.gd" id="18_placed"]
 [ext_resource type="Texture2D" uid="uid://btljp6wgv51tb" path="res://assets/Machines/StartMachine.png" id="19_start"]
 [ext_resource type="Texture2D" uid="uid://da30n0kwqflkj" path="res://assets/Machines/EndMachine.png" id="20_end"]
@@ -24,21 +23,27 @@
 [ext_resource type="Texture2D" uid="uid://bukr8vaf3h5ia" path="res://assets/TransportBelt/TransportHorizontal.png" id="23_middle"]
 [ext_resource type="Texture2D" uid="uid://bfhsvx4kw12he" path="res://assets/TransportBelt/TransportRightEnd.png" id="24_right"]
 [ext_resource type="Script" uid="uid://dpqi6xpqn438d" path="res://SourceMachine.gd" id="25_source_logic"]
-
 [ext_resource type="PackedScene" path="res://WeldingMachine.tscn" id="26_welder"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/box_insert.wav" id="sfx_insert"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/shipment_success.wav" id="sfx_shipment"]
-[ext_resource type="AudioStream" path="res://assets/audio/Workshop Groove.mp3" id="27_music"]
+[ext_resource type="AudioStream" uid="uid://bsldi8xjguwh0" path="res://assets/audio/Workshop Groove.mp3" id="27_music"]
+[ext_resource type="PackedScene" path="res://DialogueUI.tscn" id="dialogue_ui"]
+[ext_resource type="AudioStream" uid="uid://br471vysl7j42" path="res://assets/audio/sfx/box_insert.wav" id="sfx_insert"]
+[ext_resource type="AudioStream" uid="uid://dpnx2mkoocr62" path="res://assets/audio/sfx/shipment_success.wav" id="sfx_shipment"]
+
+[ext_resource type="PackedScene" path="res://WorkshopWalls.tscn" id="workshop_walls"]
+[ext_resource type="Script" path="res://InletBox.gd" id="inlet_box"]
+[ext_resource type="Script" path="res://PackingMachine.gd" id="packing_machine"]
 
 [node name="Main" type="Node2D" unique_id=1685539245]
 script = ExtResource("1_main")
 
-[node name="BackgroundMusic" type="AudioStreamPlayer" parent="."]
+[node name="WorkshopWalls" parent="." instance=ExtResource("workshop_walls")]
+
+[node name="BackgroundMusic" type="AudioStreamPlayer" parent="." unique_id=1904888994]
 stream = ExtResource("27_music")
 volume_db = -10.0
 autoplay = true
 
-[node name="ShipmentSound" type="AudioStreamPlayer" parent="."]
+[node name="ShipmentSound" type="AudioStreamPlayer" parent="." unique_id=686439179]
 stream = ExtResource("sfx_shipment")
 volume_db = -10.0
 bus = &"SFX"
@@ -736,30 +741,26 @@ scale = Vector2(0.5, 0.5)
 texture = ExtResource("9_d2")
 
 [node name="Deco_3" type="Sprite2D" parent="DecorationLayer" unique_id=567066622]
-position = Vector2(290, 389)
+modulate = Color(1, 1, 1, 0.6862745)
+position = Vector2(263, 434)
 scale = Vector2(0.5, 0.5)
 texture = ExtResource("11_d4")
 
 [node name="Deco_4" type="Sprite2D" parent="DecorationLayer" unique_id=1896402886]
-modulate = Color(1, 1, 1, 0.627451)
-position = Vector2(703, 77)
+modulate = Color(1, 1, 1, 0.49411765)
+position = Vector2(700, 80)
 scale = Vector2(0.5, 0.5)
 texture = ExtResource("12_d5")
 
 [node name="Deco_5" type="Sprite2D" parent="DecorationLayer" unique_id=1047851260]
-modulate = Color(1, 1, 1, 0.627451)
-position = Vector2(580, 142)
+modulate = Color(1, 1, 1, 0.4509804)
+position = Vector2(555, 76)
 scale = Vector2(0.3, 0.3)
 texture = ExtResource("13_d6")
 
-[node name="Deco_6" type="Sprite2D" parent="DecorationLayer" unique_id=925457675]
-modulate = Color(1, 1, 1, 0.627451)
-position = Vector2(285, 129)
-scale = Vector2(0.4, 0.4)
-texture = ExtResource("14_d7")
-
 [node name="Deco_7" type="Sprite2D" parent="DecorationLayer" unique_id=246582359]
-position = Vector2(498, 113)
+modulate = Color(1, 1, 1, 0.5882353)
+position = Vector2(93, 64)
 scale = Vector2(0.5, 0.5)
 texture = ExtResource("15_d8")
 
@@ -776,7 +777,7 @@ position = Vector2(32, 17)
 scale = Vector2(0.13928571, 0.13928571)
 texture = ExtResource("19_start")
 
-[node name="InsertSound" type="AudioStreamPlayer" parent="BuildingLayer/SourceMachine"]
+[node name="InsertSound" type="AudioStreamPlayer" parent="BuildingLayer/SourceMachine" unique_id=93729578]
 stream = ExtResource("sfx_insert")
 volume_db = -6.0
 bus = &"SFX"
@@ -799,7 +800,7 @@ texture = ExtResource("22_left")
 visible = false
 z_index = -1
 position = Vector2(-32, 32)
-scale = Vector2(0.108, 0.108)
+scale = Vector2(0.05222628, 0.05222628)
 texture = ExtResource("17_box")
 
 [node name="CapacityLabel" type="Label" parent="BuildingLayer/SourceMachine" unique_id=2128243552]
@@ -816,14 +817,25 @@ horizontal_alignment = 1
 
 [node name="SinkMachine" type="Node2D" parent="BuildingLayer" unique_id=1055147967]
 z_index = 26
-position = Vector2(640, 256)
-script = ExtResource("18_placed")
+position = Vector2(576, 256)
+script = ExtResource("packing_machine")
 building_type = 3
 
 [node name="Sprite2D" type="Sprite2D" parent="BuildingLayer/SinkMachine" unique_id=43027]
 position = Vector2(32, 17)
 scale = Vector2(0.13944134, 0.13944134)
 texture = ExtResource("20_end")
+
+[node name="PackingProgress" type="Label" parent="BuildingLayer/SinkMachine"]
+offset_left = -8.0
+offset_top = -76.0
+offset_right = 72.0
+offset_bottom = -48.0
+theme_override_constants/outline_size = 5
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 22
+text = "0/5"
+horizontal_alignment = 1
 
 [node name="Belt_3_4" type="Node2D" parent="BuildingLayer" unique_id=1581298455]
 position = Vector2(192, 256)
@@ -867,7 +879,7 @@ position = Vector2(32, 32)
 scale = Vector2(0.15058823, 0.15058823)
 texture = ExtResource("23_middle")
 
-[node name="WeldingMachine" parent="BuildingLayer" instance=ExtResource("26_welder")]
+[node name="WeldingMachine" parent="BuildingLayer" unique_id=770446487 instance=ExtResource("26_welder")]
 z_index = 26
 position = Vector2(384, 256)
 
@@ -899,16 +911,17 @@ position = Vector2(32, 32)
 scale = Vector2(0.15058823, 0.15058823)
 texture = ExtResource("23_middle")
 
-[node name="Belt_9_4" type="Node2D" parent="BuildingLayer" unique_id=509211791]
-position = Vector2(576, 256)
+[node name="Belt_10_4" type="Node2D" parent="BuildingLayer" unique_id=509211791]
+position = Vector2(640, 256)
 script = ExtResource("18_placed")
+direction = 3
 
-[node name="Surface" type="Sprite2D" parent="BuildingLayer/Belt_9_4" unique_id=1990487736]
+[node name="Surface" type="Sprite2D" parent="BuildingLayer/Belt_10_4" unique_id=1990487736]
 position = Vector2(32, 32)
 scale = Vector2(0.14190687, 0.14190687)
 texture = ExtResource("21_belt")
 
-[node name="Frame" type="Sprite2D" parent="BuildingLayer/Belt_9_4" unique_id=759713973]
+[node name="Frame" type="Sprite2D" parent="BuildingLayer/Belt_10_4" unique_id=759713973]
 position = Vector2(32, 32)
 scale = Vector2(0.14065935, 0.14065935)
 texture = ExtResource("24_right")
@@ -922,10 +935,11 @@ script = ExtResource("3_item")
 [node name="Box" type="Sprite2D" parent="." unique_id=1627034073]
 z_index = 4
 texture_filter = 4
-position = Vector2(544, 224)
-scale = Vector2(0.15, 0.15)
+position = Vector2(-32, 288)
+scale = Vector2(0.0725365, 0.0725365)
 texture = ExtResource("17_box")
-offset = Vector2(0, -104)
+offset = Vector2(0, -240)
+script = ExtResource("inlet_box")
 
 [node name="Worker" parent="." unique_id=1741121801 instance=ExtResource("16_worker")]
 position = Vector2(352, 224)
@@ -952,3 +966,6 @@ text = "WASD: 移动  左键: 寻路/搬箱/投料  拖拽: 铺带  E: 拾箱/�
 [node name="TickTimer" type="Timer" parent="." unique_id=1996499133]
 wait_time = 0.5
 autostart = true
+
+[node name="DialogueUI" parent="." unique_id=1597504982 instance=ExtResource("dialogue_ui")]
+visible = false

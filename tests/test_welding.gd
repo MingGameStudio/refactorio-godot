@@ -117,7 +117,7 @@ func _run() -> void:
 	check(not machine.processing and machine.cells == 2, "No automatic second cycle")
 	for i in 6:
 		game._on_tick()
-	check(game.score == 1 and game.items.is_empty(), "Product travels to sink once")
+	check(game.score == 0 and game.items.is_empty() and game._packing_machine.battery_count == 1, "Product enters packing once without scoring")
 	press_e()
 	interaction._physics_process(0.5)
 	check(game.move_welder(machine, Vector2i(8, 6)), "Machine can move with materials")
@@ -164,11 +164,13 @@ func _run() -> void:
 			if machine.processing:
 				operations += 1
 		interaction._physics_process(0.5)
-		var units: int = source.capacity + machine.cells + (2 if machine.output_pending else 0) + game.score * 2
+		var units: int = source.capacity + machine.cells + (2 if machine.output_pending else 0) + game._packing_machine.battery_count * 2
+		for box in game.packed_boxes:
+			units += int(box.get_meta("battery_count")) * 2
 		for item in game.items:
 			units += 2 if item.get("kind", "cell") == "battery_set" else 1
 		check(units == 10, "Material conservation throughout complete production line")
-	check(operations == 5 and game.score == 5 and game.items.is_empty() and source.capacity == 0 and machine.cells == 0 and not machine.output_pending, "Ten cells produce five components through five manual operations")
+	check(operations == 5 and game.score == 0 and game.packed_boxes.size() == 1 and game.items.is_empty() and source.capacity == 0 and machine.cells == 0 and not machine.output_pending, "Ten cells produce one unshipped crate through five manual operations")
 	game.queue_free()
 	await process_frame
 	print("Welding checks completed: %d failures" % failures)

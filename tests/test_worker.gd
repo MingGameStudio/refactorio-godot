@@ -56,6 +56,8 @@ func _run() -> void:
 	gesture(game, Vector2(32, 96), Vector2(-20, 96))
 	assert(worker.target_position == target)
 	var box: Sprite2D = game.get_node("Box")
+	# 普通地面箱子回归；入口外格另由 test_inlet_pickup 覆盖。
+	box.position = Vector2(544, 224)
 	var click_position := box.global_position + Vector2(0, -15)
 	assert(game._box_contains(click_position))
 	gesture(game, click_position, click_position)

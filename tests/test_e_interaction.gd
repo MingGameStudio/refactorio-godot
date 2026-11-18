@@ -28,11 +28,15 @@ func _run() -> void:
 	var interaction = game.welding_interaction
 	interaction.set_physics_process(false)
 	var box = game._box
+	box.position = Vector2(544, 224) # 普通地面拾取/隔设施拒绝的固定测试布局。
 	await physics_frame
 	press_e(interaction)
 	check(not worker.carrying_box and box.visible, "Distant E does not pick up or walk")
 	check(not interaction._frame.visible, "No frame without available interaction")
+	# 建造现在会保护地面箱子；先建立遮挡测试设施，再把箱子摆回其后。
+	box.position = Vector2(608, 224)
 	game._set_building(Vector2i(8, 3), game.Building.BELT)
+	box.position = Vector2(544, 224)
 	worker.position = Vector2(500, 224)
 	await physics_frame
 	press_e(interaction)

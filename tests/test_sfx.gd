@@ -30,7 +30,7 @@ func _run() -> void:
 		check(sound.stream != null and not sound.playing and sound.bus == &"SFX" and sound.max_polyphony == 1, "Sound configured without autoplay or overlapping voices")
 		check(sound.stream is AudioStreamWAV and sound.stream.loop_mode == AudioStreamWAV.LOOP_DISABLED, "Effects are one-shot WAVs")
 	check(not source.accept_box(worker) and not insert.playing, "Empty-handed delivery is silent")
-	worker.global_position = game.get_node("Box").global_position + Vector2(0, 32)
+	worker.global_position = game.get_node("Box").pickup_approach()
 	await physics_frame
 	await process_frame
 	check(worker.pickup_box(game.get_node("Box")) and pickup.playing, "Successful pickup plays sound")
@@ -77,10 +77,10 @@ func _run() -> void:
 	game._on_tick()
 	check(game.score == 0 and not shipment.playing, "Entering shipping cell is not settlement")
 	game._on_tick()
-	check(game.score == 1 and game.items.is_empty() and shipment.playing, "Settlement plays success once")
+	check(game.score == 0 and game.items.is_empty() and not shipment.playing, "Packing intake does not score or play shipping sound")
 	shipment.stop()
 	game._on_tick()
-	check(game.score == 1 and not shipment.playing, "Settled product cannot play again")
+	check(game.score == 0 and not shipment.playing, "Loose product never plays shipping sound")
 	for sound in [pickup, insert, pulse, complete, shipment, game.get_node("BackgroundMusic")]:
 		sound.stop()
 	# 给音频线程时间释放播放实例，再退出无界面测试。
