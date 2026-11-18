@@ -942,8 +942,6 @@ func spawn_packed_box(cell: Vector2i) -> bool:
 func drop_carried_box() -> bool:
 	if _worker.dialogue_locked or not _worker.carrying_box or not is_instance_valid(_worker.carried_box_node):
 		return false
-	if is_at_shipping_port():
-		return _ship_carried_box()
 	var cell := world_to_cell(_worker.global_position) + (Vector2i.LEFT if _worker.sprite.flip_h else Vector2i.RIGHT)
 	if not _in_bounds(cell) or _has_item_at(cell) or _has_box_at(cell) or _cell_overlaps_worker(cell):
 		return false

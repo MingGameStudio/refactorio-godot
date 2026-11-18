@@ -2,9 +2,9 @@
 
 Main/BuildingLayer/SinkMachine 使用 PackingMachine.gd。电池组沿现有传送带进入发货格，到达后调用 accept_battery，battery_count 每个只加一，PackingProgress 显示 0/5～5/5。满五个后由 try_pack 请求在右侧 (10, 4) 输出格创建一个 PackedBox；成功才扣除五个。输出格必须有传送带，且没有散件、可见箱子或人物；堵塞时保留 5/5，后续电池组等待，不重复计数。每次生产 Tick 重试，解除堵塞后仅生成一箱。
 
-成品箱复用 BoxFront.png、Worker 的持箱动画、拾取音效和 E/鼠标拾取；PackedBox.gd 提供从可达邻格拾取带面箱子的接口。Main 统一查找原料箱和成品箱。按 Q 放到面前相邻空地（或未占用的装箱输出带），复用同一箱子节点，箱内五个电池组及类型元数据不变。对话锁定、格子占用或出界时拒绝放下。成品箱不会自动随传送带移动；右侧出货口接入 Q 发货，见下文。SourceMachine 拒绝 battery_crate，避免把成品箱重新变成原料。
+成品箱复用 BoxFront.png、Worker 的持箱动画、拾取音效和 E/鼠标拾取；PackedBox.gd 提供从可达邻格拾取带面箱子的接口。Main 统一查找原料箱和成品箱。按 Q 放到面前相邻空地（或未占用的装箱输出带），复用同一箱子节点，箱内五个电池组及类型元数据不变。对话锁定、格子占用或出界时拒绝放下。成品箱不会自动随传送带移动；右侧出货口接入 E 发货，见下文。SourceMachine 拒绝 battery_crate，避免把成品箱重新变成原料。
 
-**仅将装箱机生成的成品箱交到右侧出货口时加 1 分。** 电池组进入机器、装箱、拾取及普通地面放下均不计分。携带成品箱站在出货口内侧 (11, 4) 格、面向右侧按 Q，显示“Q 发货（+1）”。校验 packed_boxes 注册、PackedBox 脚本、battery_crate 类型及五个电池组内容；原料箱或未注册箱子拒绝发货并保留在手中。成功后先清除持箱和注册状态，再从场景移除箱子，更新 ScoreLabel 并播放 ShipmentSound；重复按键不会重复计分。
+**仅将装箱机生成的成品箱交到右侧出货口时加 1 分。** 电池组进入机器、装箱、拾取及普通地面放下均不计分。携带成品箱站在出货口内侧 (11, 4) 格、面向右侧按 E，显示“E 发货（+1）”。校验 packed_boxes 注册、PackedBox 脚本、battery_crate 类型及五个电池组内容；原料箱或未注册箱子拒绝发货并保留在手中。成功后先清除持箱和注册状态，再从场景移除箱子，更新 ScoreLabel 并播放 ShipmentSound；重复按键不会重复计分。
 
     godot --headless --path . --script tests/test_packing.gd
     godot --path . --rendering-method gl_compatibility --resolution 1152x648 --script tests/test_packing.gd -- --preview
@@ -17,7 +17,7 @@ Main.tscn 实例化 WorkshopWalls.tscn；编辑器与运行时均由 WorkshopWal
 
 墙体位于 768×512 地板外缘，不占用建造网格。直墙按一格墙厚等比缩放后重复，末段通过 Sprite2D.region_rect 裁切。门宽三格，货口高两格，右口水平镜像；所有 Sprite 保持宽高比。相机按墙体与货口实际外缘计算最紧取景，在完整显示车间的前提下等比放大，底部贴齐窗口；HUD 叠在场景上，不额外留白，宽高比不一致时保留必要的侧边或顶部空隙。
 
-ExitApproach、InletApproach、OutletApproach 提供出入口定位。现有流程只有 Intro → Main，没有返回仓库并保留工厂状态的逻辑，所以顶部出口不触发场景切换。入料箱位于地图外 (-1, 4) 格，脚底坐标 (-32, 288)，通过 InletBox.gd 提供特殊拾取接口：人物在内侧 (0, 4) 格按 E 取料，或点击箱子寻路到内侧格中心后拾取。仅该入口箱子允许跨地图边界拾取，仍检查内侧设施遮挡、距离、对话锁和持箱状态；地图外不能走入、铺带或拆除。箱子移回地图内时恢复普通地面拾取规则。不自动补货；出货口支持成品箱 Q 发货。上料机容量、点焊缓存及传送带逻辑保持原状。人物继续使用 GridCollision 的四边边界（下方只有不可见地图边界，没有墙壁 Sprite）。
+ExitApproach、InletApproach、OutletApproach 提供出入口定位。现有流程只有 Intro → Main，没有返回仓库并保留工厂状态的逻辑，所以顶部出口不触发场景切换。入料箱位于地图外 (-1, 4) 格，脚底坐标 (-32, 288)，通过 InletBox.gd 提供特殊拾取接口：人物在内侧 (0, 4) 格按 E 取料，或点击箱子寻路到内侧格中心后拾取。仅该入口箱子允许跨地图边界拾取，仍检查内侧设施遮挡、距离、对话锁和持箱状态；地图外不能走入、铺带或拆除。箱子移回地图内时恢复普通地面拾取规则。不自动补货；出货口支持成品箱 E 发货。上料机容量、点焊缓存及传送带逻辑保持原状。人物继续使用 GridCollision 的四边边界（下方只有不可见地图边界，没有墙壁 Sprite）。
 
     godot --headless --path . --script tests/test_inlet_pickup.gd
 

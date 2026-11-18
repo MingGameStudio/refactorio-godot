@@ -6,12 +6,12 @@ func check(value: bool, message: String) -> void:
 		push_error(message)
 		failures += 1
 
-func press_q(game: Node2D, echo: bool = false) -> void:
+func press_e(game: Node2D, echo: bool = false) -> void:
 	var key := InputEventKey.new()
-	key.physical_keycode = KEY_Q
+	key.physical_keycode = KEY_E
 	key.pressed = true
 	key.echo = echo
-	game._input(key)
+	game.welding_interaction._unhandled_key_input(key)
 
 func _initialize() -> void:
 	call_deferred("_run")
@@ -35,8 +35,9 @@ func _run() -> void:
 	check(worker.pickup_box(game._box), "Pick up original raw material")
 	worker.global_position = approach
 	worker.sprite.flip_h = false
-	press_q(game)
+	press_e(game)
 	check(game.score == 0 and worker.carrying_box and worker.carried_box_node == game._box, "Raw crate cannot ship or be lost")
+	check(not game.welding_interaction._frame.visible, "Raw crate does not highlight shipping target")
 	worker.release_box()
 	game._box.show()
 	for i in 4:
@@ -54,15 +55,27 @@ func _run() -> void:
 	check(not game._ship_carried_box(), "Must face the port")
 	worker.sprite.flip_h = false
 	worker.set_dialogue_locked(true)
-	press_q(game)
+	press_e(game)
 	check(game.score == 0 and worker.carrying_box, "Dialogue blocks shipping")
 	worker.set_dialogue_locked(false)
 	game.welding_interaction._physics_process(0.0)
-	check(game.welding_interaction._hint.text == "Q 发货（+1）", "Shipping hint identifies valid delivery")
-	press_q(game, true)
+	check(game.welding_interaction._hint.text == "E 发货（+1）", "Shipping hint identifies valid delivery")
+	var frame: Sprite2D = game.welding_interaction._frame
+	check(frame.visible and frame.global_position.is_equal_approx(approach + Vector2(64, 0)), "Target frame marks exterior shipping cell")
+	var drop_key := InputEventKey.new()
+	drop_key.physical_keycode = KEY_Q
+	drop_key.pressed = true
+	game._input(drop_key)
+	check(game.score == 0 and worker.carried_box_node == box, "Q at port cannot ship or lose crate")
+	if "--preview" in OS.get_cmdline_user_args():
+		await process_frame
+		await RenderingServer.frame_post_draw
+		root.get_texture().get_image().save_png("res://tests/shipping-target-preview.png")
+	press_e(game, true)
 	check(game.score == 0, "Key repeat cannot ship")
-	press_q(game)
+	press_e(game)
 	check(game.score == 1 and not worker.carrying_box and game.packed_boxes.is_empty(), "One finished crate scores exactly one")
+	check(not frame.visible, "Successful delivery immediately clears target frame")
 	check(box.get_parent() == null and box.is_queued_for_deletion(), "Shipped crate immediately leaves scene")
 	check(game.get_node("UI/ScoreLabel").text.begins_with("得分: 1"), "HUD updates in same event")
 	check(sound.playing, "Only successful shipment plays shipment sound")
@@ -71,7 +84,7 @@ func _run() -> void:
 		await RenderingServer.frame_post_draw
 		root.get_texture().get_image().save_png("res://tests/shipping-preview.png")
 	sound.stop()
-	press_q(game)
+	press_e(game)
 	check(game.score == 1 and not sound.playing, "Duplicate delivery cannot score or play sound")
 	await process_frame
 	check(not is_instance_valid(box), "Shipped node is freed")
@@ -85,7 +98,7 @@ func _run() -> void:
 	await physics_frame
 	check(worker.pickup_box(fake), "Test crate can use normal pickup interface")
 	worker.sprite.flip_h = false
-	press_q(game)
+	press_e(game)
 	check(game.score == 1 and worker.carried_box_node == fake, "Unregistered crate cannot score even with correct tags")
 	print("Shipping checks; failures=", failures)
 	game.queue_free()

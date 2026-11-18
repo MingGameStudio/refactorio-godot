@@ -70,15 +70,20 @@ func _physics_process(delta: float) -> void:
 	var pickup_box: Sprite2D = game.nearest_pickup_box()
 	var box_ready: bool = not is_instance_valid(active) and pickup_box != null
 	var delivery_ready: bool = not is_instance_valid(active) and worker.carrying_box and _can_deliver()
+	var shipping_ready: bool = not is_instance_valid(active) and game.can_ship_carried_box()
 	_hint.text = "E 投料" if delivery_ready else ("E 拾取箱子" if box_ready else "")
 	if worker.carrying_box and not delivery_ready:
 		if game.is_at_shipping_port():
-			_hint.text = "Q 发货（+1）" if game.can_ship_carried_box() else "出货口仅接收装箱机生成的成品箱"
+			_hint.text = "E 发货（+1）" if shipping_ready else "出货口仅接收装箱机生成的成品箱"
 		else:
 			_hint.text += "  Q 放下箱子（面前空格）"
 	_frame.hide()
 	# 与 E 的执行优先级一致，同一时刻只标记实际将响应的目标。
-	if delivery_ready:
+	if shipping_ready:
+		# 标记墙外出货格，复用 S1 投料的目标框与呼吸效果。
+		var approach: Node2D = game.get_node("WorkshopWalls/OutletApproach")
+		_show_frame(approach, Rect2(Vector2(game.CELL * 0.5, -game.CELL * 0.5), Vector2.ONE * game.CELL))
+	elif delivery_ready:
 		_show_frame(game._source_machine.get_node("InputBelt"), Rect2(0, 0, 64, 64))
 	elif box_ready:
 		_show_frame(pickup_box, pickup_box.get_rect())
@@ -95,6 +100,10 @@ func operate() -> bool:
 	if is_instance_valid(active):
 		return false
 	if worker.carrying_box:
+		if game.can_ship_carried_box():
+			if game._ship_carried_box():
+				_physics_process(0.0)
+				return true
 		if not _can_deliver():
 			return false
 		worker._face_toward(game._source_machine.input_position())
