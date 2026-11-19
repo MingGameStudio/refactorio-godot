@@ -4,6 +4,8 @@ var game: Node2D
 var worker: Node2D
 var active: Node2D
 var focused: Node2D
+var _e_held: bool = false
+var _waiting_welder: Node2D
 var _hint: Label
 const INTERACTION_FRAME = preload("res://assets/UI/InteractionFrame.png")
 var _frame: Sprite2D
@@ -68,6 +70,12 @@ func _physics_process(delta: float) -> void:
 			nearest = distance
 			focused = machine
 	var pickup_box: Sprite2D = game.nearest_pickup_box()
+	# 提前按住 E 等待电芯：只延续本次在该机器旁发起的操作意图。
+	if is_instance_valid(_waiting_welder):
+		if not _e_held or focused != _waiting_welder or worker.carrying_box or pickup_box != null:
+			_waiting_welder = null
+		elif not is_instance_valid(active) and _waiting_welder.can_begin_operation(worker):
+			_begin_welding(_waiting_welder)
 	var box_ready: bool = not is_instance_valid(active) and pickup_box != null
 	var delivery_ready: bool = not is_instance_valid(active) and worker.carrying_box and _can_deliver()
 	var shipping_ready: bool = not is_instance_valid(active) and game.can_ship_carried_box()
@@ -118,8 +126,16 @@ func operate() -> bool:
 		return true
 	if not is_instance_valid(focused):
 		return false
-	if focused.begin_operation(worker):
-		active = focused
+	if _begin_welding(focused):
+		return true
+	if _e_held and focused.cells < 2 and not focused.output_pending:
+		_waiting_welder = focused
+	return false
+
+func _begin_welding(machine: Node2D) -> bool:
+	if machine.begin_operation(worker):
+		_waiting_welder = null
+		active = machine
 		worker._face_toward(active.to_global(Vector2(32, 32)))
 		worker.set_operating(true)
 		_frame.hide()
@@ -132,20 +148,29 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	if not event is InputEventKey or event.physical_keycode != KEY_E:
 		return
 	if event.pressed and not event.echo:
+		_e_held = true
 		operate()
-	elif not event.pressed and is_instance_valid(active):
-		active.cancel_operation()
-		active = null
-		worker.set_operating(false)
+	elif not event.pressed:
+		_e_held = false
+		_waiting_welder = null
+		if is_instance_valid(active):
+			active.cancel_operation()
+			active = null
+			worker.set_operating(false)
 	get_viewport().set_input_as_handled()
 
 func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		_e_held = false
+		_waiting_welder = null
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and is_instance_valid(active):
 		active.cancel_operation()
 		active = null
 		worker.set_operating(false)
 
 func cancel_for_dialogue() -> void:
+	_e_held = false
+	_waiting_welder = null
 	if is_instance_valid(active):
 		active.cancel_operation()
 	active = null

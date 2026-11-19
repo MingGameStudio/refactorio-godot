@@ -88,6 +88,8 @@ func _run() -> void:
 	check(game.score == 1 and not sound.playing, "Duplicate delivery cannot score or play sound")
 	await process_frame
 	check(not is_instance_valid(box), "Shipped node is freed")
+	# 首单剧情现在会锁定输入；继续发货拒绝测试前结束剧情。
+	game.dialogue_ui.finish_dialogue()
 	# Matching appearance, script and metadata alone do not establish machine provenance.
 	var fake := Sprite2D.new()
 	fake.set_script(game.PACKED_BOX)

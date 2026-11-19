@@ -13,6 +13,7 @@ var _space_held: bool = false
 var _mouse_pressed: bool = false
 var _idle_elapsed: float = 0.0
 var _use_idle: bool = false
+var _opening_frames: SpriteFrames
 
 @onready var _root: Control = $Root
 @onready var _panel: Control = $Root/Panel
@@ -31,8 +32,9 @@ func _ready() -> void:
 
 ## 每句格式：{ "text": String, "name": String, "job_title": String, "portrait": Texture2D, "voice": AudioStream }。
 ## voice 可省略；语音播放结束不推进对话。
+## opening_frames 可选：整段对话开始时播放一次，再切回 Idle；切句不重播。
 ## 播放中拒绝覆盖；空数组不启动。返回是否成功开始。
-func start_dialogue(lines: Array) -> bool:
+func start_dialogue(lines: Array, opening_frames: SpriteFrames = null) -> bool:
 	if is_active or lines.is_empty():
 		return false
 	_lines.clear()
@@ -43,6 +45,7 @@ func start_dialogue(lines: Array) -> bool:
 			return false
 		_lines.append(line.duplicate())
 	_index = 0
+	_opening_frames = opening_frames
 	_idle_elapsed = 0.0
 	_mouse_pressed = false
 	_space_held = Input.is_physical_key_pressed(KEY_SPACE)
@@ -69,7 +72,7 @@ func _show_line() -> void:
 	_layout()
 
 func _process(delta: float) -> void:
-	if not is_active or not _use_idle:
+	if not is_active:
 		return
 	_idle_elapsed += delta
 	_update_idle_portrait()
@@ -77,7 +80,16 @@ func _process(delta: float) -> void:
 func _update_idle_portrait() -> void:
 	if not _use_idle or idle_frames == null or idle_frames.get_frame_count(&"default") == 0:
 		return
-	var frame := int(_idle_elapsed * idle_frames.get_animation_speed(&"default")) % idle_frames.get_frame_count(&"default")
+	# 单次开场动画与文本索引无关，切句不重置，播完立即循环现有 Idle。
+	var idle_time := _idle_elapsed
+	if _opening_frames != null and _opening_frames.get_frame_count(&"default") > 0:
+		var speed := maxf(_opening_frames.get_animation_speed(&"default"), 0.01)
+		var duration := _opening_frames.get_frame_count(&"default") / speed
+		if _idle_elapsed < duration:
+			_portrait.texture = _opening_frames.get_frame_texture(&"default", int(_idle_elapsed * speed))
+			return
+		idle_time -= duration
+	var frame := int(idle_time * idle_frames.get_animation_speed(&"default")) % idle_frames.get_frame_count(&"default")
 	_portrait.texture = idle_frames.get_frame_texture(&"default", frame)
 
 func finish_dialogue() -> void:
@@ -85,6 +97,7 @@ func finish_dialogue() -> void:
 	if not is_active:
 		return
 	is_active = false
+	_opening_frames = null
 	hide()
 	_lines.clear()
 	active_changed.emit(false)

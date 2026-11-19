@@ -84,6 +84,16 @@ var items: Array = []
 
 # --- 得分 ---
 var score: int = 0
+const FIRST_ORDER_STORY_KEY := &"refactorio_first_order_story_started"
+const HAPPY_FRAMES = preload("res://FemaleAssistantHappy.tres")
+const FIRST_ORDER_LINES := [
+	{"name": "徐知夏", "job_title": "厂长助理", "text": "第一单完成得不错。", "voice": preload("res://assets/audio/dialogs/firsttask/VO01.mp3")},
+	{"name": "徐知夏", "job_title": "厂长助理", "text": "不过，我招你来可不是让你一直干这些活的。刚才只是让你熟悉一下生产线。", "voice": preload("res://assets/audio/dialogs/firsttask/VO02.mp3")},
+	{"name": "主角", "job_title": "", "text": "那接下来呢？"},
+	{"name": "徐知夏", "job_title": "厂长助理", "text": "我给你安排了一名工人。上料、点焊、出货，他都能做。", "voice": preload("res://assets/audio/dialogs/firsttask/VO03.mp3")},
+	{"name": "主角", "job_title": "", "text": "那我呢？"},
+	{"name": "徐知夏", "job_title": "厂长助理", "text": "你要先学会观察。", "voice": preload("res://assets/audio/dialogs/firsttask/VO04.mp3")},
+]
 
 # --- 拖拽铺设状态 ---
 # _drag_active=true 期间持续根据鼠标位置更新预览路径
@@ -987,7 +997,18 @@ func _ship_carried_box() -> bool:
 	score += 1
 	$ShipmentSound.play()
 	_update_score_label()
+	_try_first_order_dialogue()
 	return true
+
+func _try_first_order_dialogue() -> void:
+	# 当前运行流程共享标记：重新实例化车间也不能重播；重启游戏自然重置。
+	var session := get_tree().root
+	if score < 1 or session.get_meta(FIRST_ORDER_STORY_KEY, false) or dialogue_ui.is_active:
+		return
+	# 先标记再启动 UI，防止 active_changed 等回调重复触发。
+	session.set_meta(FIRST_ORDER_STORY_KEY, true)
+	if not dialogue_ui.start_dialogue(FIRST_ORDER_LINES, HAPPY_FRAMES):
+		session.remove_meta(FIRST_ORDER_STORY_KEY)
 
 func _finish_left_gesture(world: Vector2) -> void:
 	_update_left_gesture(world)

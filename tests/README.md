@@ -1,3 +1,16 @@
+# 首单完成剧情
+
+Main._ship_carried_box 在移除成品箱、增加得分、播放发货音效并更新 HUD 后调用 _try_first_order_dialogue。SceneTree 根节点的 refactorio_first_order_story_started 标记在启动对话前写入，保证同一游戏运行流程只播放一次（包括重新实例化车间）；重新启动游戏重置。未成功交付和仅装箱不会触发。
+
+六句文本复用 DialogueUI 的 name/job_title/text 字典。主角句显示“主角”，徐知夏立绘在整段剧情持续播放。复用 active_changed 输入锁，禁止移动、点焊、拾取、放下和发货，结束后恢复；保持现有开场方式，不暂停场景树，不生成工人或新订单。
+
+FemaleAssistantHappy.tres 按目录文件名顺序引用 FemaleHappy/0002.png～0073.png，共 72 帧、720×1080，与 Idle 画布尺寸相同。沿用 Idle 的 SpriteFrames 资源方式，18 FPS、不循环。DialogueUI.start_dialogue(lines, opening_frames) 的可选第二参数指定单次开场动画；第一句立即显示第一帧，经过 4 秒独立切到循环 Idle，切句不重置计时。统一沿用原 TextureRect 布局、缩放和透明边缘 shader。快速结束对话会清除开场动画，普通对话仍默认播放 Idle。
+
+    godot --headless --path . --script tests/test_first_order_dialogue.gd
+    godot --path . --rendering-method gl_compatibility --resolution 1152x648 --script tests/test_first_order_dialogue.gd -- --preview
+
+验证交付后触发、首帧和六句文本、独立切换 Idle、不重播、快速推进、控制锁定/恢复、后续订单正常计分、同流程场景重建不重播，以及动画切换几何不变。预览保存 tests/first-order-happy-preview.png。
+
 # 发货机装箱
 
 Main/BuildingLayer/SinkMachine 使用 PackingMachine.gd。电池组沿现有传送带进入发货格，到达后调用 accept_battery，battery_count 每个只加一，PackingProgress 显示 0/5～5/5。满五个后由 try_pack 请求在右侧 (10, 4) 输出格创建一个 PackedBox；成功才扣除五个。输出格必须有传送带，且没有散件、可见箱子或人物；堵塞时保留 5/5，后续电池组等待，不重复计数。每次生产 Tick 重试，解除堵塞后仅生成一箱。
@@ -181,6 +194,10 @@ WorkerHoldIdle.png 为单帧姿势，WorkerHoldWalk.png 为四帧动画。
 test_worker.gd 同时检查拾取距离、取消拾取、持箱动画和左右朝向。
 
 ## 点焊机
+
+在点焊机旁提前按住 E 时，会等待电芯补齐并在下一物理帧立即开始本次点焊，无需松开重按。松开 E、离开机器、失去窗口焦点或进入对话会取消等待；完成一次点焊后不会自动连做下一批，拾箱/投料/发货仍只在按下时执行。
+
+    godot --headless --path . --script tests/test_welding_hold.gd
 
 Main.tscn 中的 WeldingMachine 位于 (6, 4)，替换原有一格传送带。
 机器显示高度与其他机器一致，为 1.95 格，逻辑占用一格。左侧接收朝右输送的电芯，缓存最多两个。

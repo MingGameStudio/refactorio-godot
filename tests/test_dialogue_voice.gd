@@ -36,5 +36,21 @@ func _run() -> void:
 	root.remove_child(ui)
 	assert(not voice.playing)
 	ui.free()
+	# 首单六句共用原有播放器：四段徐知夏语音，主角两句静音。
+	ui = load("res://DialogueUI.tscn").instantiate()
+	root.add_child(ui)
+	voice = ui.get_node("Voice")
+	var main_script = load("res://Main.gd")
+	ui.start_dialogue(main_script.FIRST_ORDER_LINES, main_script.HAPPY_FRAMES)
+	var expected := ["VO01", "VO02", "", "VO03", "", "VO04"]
+	for i in expected.size():
+		assert(ui.get_node("Root/Panel/Body").text == main_script.FIRST_ORDER_LINES[i].text)
+		if expected[i].is_empty():
+			assert(not voice.playing and voice.stream == null)
+		else:
+			assert(voice.playing and voice.stream.resource_path == "res://assets/audio/dialogs/firsttask/%s.mp3" % expected[i])
+		ui._advance_line()
+	assert(not voice.playing and not ui.is_active)
+	ui.free()
 	print("Dialogue voice checks passed")
 	quit()
