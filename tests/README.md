@@ -1,3 +1,16 @@
+# 生产订单 HUD
+
+UI/OrderHUD 是 CanvasLayer 下独立的 Control 场景，按 viewport 大小等比缩放，固定左上角。OrderHUD.tscn 的图标、箭头、文字和五个绿色填充块均为独立节点；所有 Control 都使用 MOUSE_FILTER_IGNORE。TextureRect 使用 LINEAR 过滤、KEEP_ASPECT_CENTERED，AtlasTexture 开启 filter_clip，避免采样相邻元素。旧 ScoreLabel 仅隐藏保留兼容查询；操作说明移到屏幕底部，交互提示放在订单面板下方。
+
+OrderHUD.png 为 1640×842 RGBA。依据 alpha 内容分离 AtlasTexture 区域（x,y,w,h）：面板 (7,15,1030,667)，电池组 (1304,77,197,201)，箱子 (1259,304,292,249)，出货口 (1210,596,242,161)，箭头 (1491,617,123,112)，空进度条 (54,722,469,112)，绿色块 (579,722,106,113)。图集原有标题字样由 TitleCover 遮盖，再由 Title Label 动态绘制；其余文本也全部使用 Label。
+
+OrderHUD.gd 是只读展示，不维护独立计数：交付读取 score，装箱读取 PackingMachine.battery_count；packed_boxes 中存在成品箱时（包括已拾取的隐藏节点），展示装箱完成 5/5。订单完成后保持 1/1 和 5/5。每个生产 Tick 后、成功发货时及正常画面更新时刷新。target_boxes、delivered_baseline 为未来多箱订单预留展示参数，不改变现有订单判定。
+
+    godot --headless --path . --script tests/test_order_hud.gd
+    godot --path . --rendering-method gl_compatibility --resolution 1152x648 --script tests/test_order_hud.gd -- --preview
+
+覆盖开始 0/1、0/5，实际进料 1/5、3/5、5/5，点焊不增加装箱进度，拾箱仍 0/1，成功 E 交付变 1/1，首单对话仍触发；检查全部控件鼠标穿透、相机独立、800×600/1920×1080 窗口适配和多箱目标配置。预览为 tests/order-hud-initial.png、order-hud-1.png、order-hud-3.png、order-hud-packed.png、order-hud-delivered.png。
+
 # 首单完成剧情
 
 Main._ship_carried_box 在移除成品箱、增加得分、播放发货音效并更新 HUD 后调用 _try_first_order_dialogue。SceneTree 根节点的 refactorio_first_order_story_started 标记在启动对话前写入，保证同一游戏运行流程只播放一次（包括重新实例化车间）；重新启动游戏重置。未成功交付和仅装箱不会触发。
@@ -97,7 +110,7 @@ if dialogue.start_dialogue([
 
 每句可另传 portrait: Texture2D；缺省使用徐知夏立绘。空队列、格式错误或播放中再次调用返回 false。
 在其他关卡复用时连接 active_changed(active) 到该关卡的玩家输入锁；UI 不依赖 Main，也不修改 SceneTree.paused。
-锁定时清除待执行移动/拾取/投料、建造手势，并取消玩家点焊（保留原料），关闭后恢复接受新操作。
+锁定时清除待执行移动/拾取/投料、建造手势，并禁止启动新的点焊；已启动的机器自行加工，关闭后恢复接受新操作。
 现有 Game/OpeningPortrait 的旧开场暂停逻辑保留，与新对话框分离。
 
     godot --headless --path . --script tests/test_dialogue.gd
@@ -195,24 +208,24 @@ test_worker.gd 同时检查拾取距离、取消拾取、持箱动画和左右�
 
 ## 点焊机
 
-在点焊机旁提前按住 E 时，会等待电芯补齐并在下一物理帧立即开始本次点焊，无需松开重按。松开 E、离开机器、失去窗口焦点或进入对话会取消等待；完成一次点焊后不会自动连做下一批，拾箱/投料/发货仍只在按下时执行。
+点焊改为单次按 E 启动，机器自己的 _physics_process 推进 3 秒加工。复用 cells、processing、output_pending、elapsed，不增加状态机。原料不足时按键不预约启动；每批准备好后需要重新按 E，绝不连续自动加工。松开 E、离开或进入对话不取消已启动的机器，也不占用玩家的交互状态，玩家可以继续 WASD、寻路、拾箱、放下或操作其他设备。
 
-    godot --headless --path . --script tests/test_welding_hold.gd
+    godot --headless --path . --script tests/test_welding_automatic.gd
 
 Main.tscn 中的 WeldingMachine 位于 (6, 4)，替换原有一格传送带。
 机器显示高度与其他机器一致，为 1.95 格，逻辑占用一格。左侧接收朝右输送的电芯，缓存最多两个。
-工人空手靠近机器（距格心不超过 68 像素）显示按住 E 操作；按下并保持 E 两秒完成加工。
-松开 E、失去窗口焦点或离开范围取消并保留原料；返回不会自动重启。完成后消耗两个电芯，生成一个电池组件。
+工人空手靠近机器（距格心不超过 68 像素），仅在原料足够且空闲时显示“E 点焊”；按一次即开始。加工期间显示“点焊中 x.x / 3 秒”和现有进度条、火花及脉冲音效，不显示 E 提示。
+3 秒完成后只消耗两个电芯，停止普通火花和脉冲音效，播放完成火花和完成音效，生成一个待输出电池组。
 右侧必须有传送带且出口无物品才能输出；否则成品留在机器内，禁止再次开工。
 
 - 编辑器：移动或复制 WeldingMachine.tscn 实例，放在 BuildingLayer 下并对齐 64 像素网格。
 - 游戏中：鼠标指向空格按 B 放置；指向点焊机按 M，再点击空格移动，Esc 取消。W 用于人物移动。
 - 右键拆除空机器；有原料、成品或正在加工时不允许拆除，以免丢失物品。移动会取消加工，但库存随机器保留。
-- WeldingMachine.gd 管理加工和库存，WeldingInteraction.gd 单独管理玩家距离、提示和按键。未来 AI 可调用 begin_operation/advance_operation 接口。
+- WeldingMachine.gd 管理加工和库存，WeldingInteraction.gd 单独管理玩家距离、提示和按键。未来 AI 可调用 begin_operation；后续由机器自动计时，勿额外推进时间。
 
     godot --headless --path . --script tests/test_welding.gd
 
-测试覆盖输入方向和种类、满载阻塞、E 重复按键、两秒加工、离开取消、出口堵塞、库存保护、移动/拆除以及整条生产线的原料守恒（10 电芯 → 5 电池组件）。
+测试覆盖输入方向和种类、满载阻塞、E 重复按键、三秒自动加工、松键及离开不中断、出口堵塞、库存保护、移动/拆除以及整条生产线的原料守恒（10 电芯 → 5 电池组件）。
 test_machine_feeding.gd 临时把点焊机位置恢复为传送带，只验证原有上料台产出十个电芯的功能。
 
 ## 自由移动与碰撞回归
@@ -252,7 +265,7 @@ Main/ShipmentSound（-10 dB）在 score 增加的结算分支播放，进入发�
     godot --headless --path . --script tests/test_sfx.gd
 
 检查失败操作静音、成功操作播放、重复调用不重播、火花间隔/取消/完成/下一轮加工，以及发货进入与实际结算的区别。
-手动试听：拾箱投料、按住 E 点焊并中途松开、完成下一轮加工、等待产品结算；确认音效与事件同步、相对背景音乐音量适中。
+手动试听：拾箱投料、点按 E 启动点焊后松开并离开、完成下一轮加工、等待产品结算；确认音效与事件同步、相对背景音乐音量适中。
 
 ## 出货计分验证
 

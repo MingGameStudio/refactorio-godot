@@ -24,6 +24,7 @@ func _run() -> void:
 	worker.set_physics_process(false)
 	worker.position = Vector2(416, 224)
 	var machine = game.get_welding_machines()[0]
+	machine.set_physics_process(false)
 	var interaction = game.welding_interaction
 	interaction.set_physics_process(false)
 	var normal: GPUParticles2D = machine.get_node("SparkOrigin/WeldingSparks")
@@ -45,11 +46,11 @@ func _run() -> void:
 	check(machine.processing and normal.emitting and not complete.emitting, "Start immediately emits regular sparks")
 	check(progress.visible and progress.value == 0.0, "Progress appears at start")
 	if "--preview" in OS.get_cmdline_user_args():
-		interaction._physics_process(1.0)
+		machine._physics_process(1.0)
 		await create_timer(0.08).timeout
 		await RenderingServer.frame_post_draw
 		root.get_texture().get_image().save_png("res://tests/welding-sparks-preview.png")
-		interaction._physics_process(1.0)
+		machine._physics_process(2.0)
 		await create_timer(0.08).timeout
 		await RenderingServer.frame_post_draw
 		root.get_texture().get_image().save_png("res://tests/welding-completion-preview.png")
@@ -60,32 +61,32 @@ func _run() -> void:
 		return
 	# 清除 emitting 标志仅用于观察下一次触发；正式取消逻辑不清空已有粒子。
 	normal.emitting = false
-	interaction._physics_process(0.29)
-	check(is_equal_approx(progress.value, 0.145), "Progress tracks actual processing without quantization")
+	machine._physics_process(0.29)
+	check(is_equal_approx(progress.value, 0.29 / 3.0), "Progress tracks actual processing without quantization")
 	check(not normal.emitting, "No early periodic burst")
-	interaction._physics_process(0.02)
+	machine._physics_process(0.02)
 	check(normal.emitting, "Burst follows elapsed processing at roughly 0.3 seconds")
 	key(interaction, false)
-	check(not progress.visible and progress.value == 0.0, "Release hides and resets progress with operation")
-	check(not machine.processing and machine.cells == 2 and normal.emitting, "Release cancels processing without clearing already emitted particles")
+	check(progress.visible and progress.value > 0.0, "Release preserves automatic progress")
+	check(machine.processing and machine.cells == 2 and normal.emitting, "Release preserves automatic operation")
 	normal.emitting = false
-	interaction._physics_process(1.0)
-	check(not normal.emitting and not complete.emitting, "Cancelled operation cannot emit new bursts")
+	machine._physics_process(1.0)
+	check(normal.emitting and not complete.emitting, "Machine continues periodic bursts")
 	key(interaction, true)
 	normal.emitting = false
 	worker.position = Vector2(32, 32)
-	interaction._physics_process(0.4)
-	check(not machine.processing and not normal.emitting and not complete.emitting, "Leaving cancels before overdue burst")
+	machine._physics_process(0.4)
+	check(machine.processing and normal.emitting and not complete.emitting, "Leaving does not stop bursts")
 	worker.position = Vector2(416, 224)
 	key(interaction, true)
 	normal.emitting = false
-	interaction._physics_process(2.0)
+	machine._physics_process(1.29)
 	check(machine.output_pending and machine.cells == 0 and complete.emitting and not normal.emitting, "Successful completion emits only larger completion burst")
 	check(progress.visible and progress.value == 1.0, "Completion shows full bar for flash")
 	await create_timer(0.2).timeout
 	check(not progress.visible and progress.modulate == Color.WHITE, "Completion flash restores brightness and hides")
 	complete.emitting = false
-	interaction._physics_process(1.0)
+	machine._physics_process(1.0)
 	key(interaction, true)
 	check(not normal.emitting and not complete.emitting, "Waiting output does not repeat completion or start sparks")
 	check(normal.get_instance_id() == normal_id and complete.get_instance_id() == complete_id, "Emitter nodes reused throughout all operations")

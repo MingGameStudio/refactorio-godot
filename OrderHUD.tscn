@@ -1,0 +1,477 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://OrderHUD.gd" id="script"]
+
+[ext_resource type="Texture2D" path="res://assets/UI/OrderHUD.png" id="atlas"]
+
+[sub_resource type="AtlasTexture" id="Panel"]
+
+atlas = ExtResource("atlas")
+
+region = Rect2(7, 15, 1030, 667)
+
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Battery"]
+
+atlas = ExtResource("atlas")
+
+region = Rect2(1304, 77, 197, 201)
+
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Crate"]
+
+atlas = ExtResource("atlas")
+
+region = Rect2(1259, 304, 292, 249)
+
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Port"]
+
+atlas = ExtResource("atlas")
+
+region = Rect2(1210, 596, 242, 161)
+
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Arrow"]
+
+atlas = ExtResource("atlas")
+
+region = Rect2(1491, 617, 123, 112)
+
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Bar"]
+
+atlas = ExtResource("atlas")
+
+region = Rect2(54, 722, 469, 112)
+
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Fill"]
+
+atlas = ExtResource("atlas")
+
+region = Rect2(579, 722, 106, 113)
+
+filter_clip = true
+
+[sub_resource type="StyleBoxFlat" id="TitleCover"]
+
+bg_color = Color(0.145, 0.15, 0.17, 1)
+
+corner_radius_top_left = 8
+
+corner_radius_top_right = 8
+
+corner_radius_bottom_left = 8
+
+corner_radius_bottom_right = 8
+
+[sub_resource type="StyleBoxFlat" id="TaskStrip"]
+
+bg_color = Color(1, 0.73, 0.15, 1)
+
+corner_radius_top_left = 16
+
+corner_radius_top_right = 16
+
+corner_radius_bottom_left = 16
+
+corner_radius_bottom_right = 16
+
+[node name="OrderHUD" type="Control"]
+
+mouse_filter = 2
+
+layout_mode = 3
+
+anchors_preset = 15
+
+anchor_right = 1.0
+
+anchor_bottom = 1.0
+
+grow_horizontal = 2
+
+grow_vertical = 2
+
+texture_filter = 2
+
+script = ExtResource("script")
+
+[node name="Panel" type="Control" parent="."]
+
+mouse_filter = 2
+
+offset_left = 0
+
+offset_top = 0
+
+offset_right = 460
+
+offset_bottom = 298
+
+[node name="Background" type="TextureRect" parent="Panel"]
+
+mouse_filter = 2
+
+offset_left = 0
+
+offset_top = 0
+
+offset_right = 460
+
+offset_bottom = 298
+
+texture = SubResource("Panel")
+
+expand_mode = 1
+
+stretch_mode = 5
+
+[node name="TitleCover" type="Panel" parent="Panel"]
+
+mouse_filter = 2
+
+offset_left = 107
+
+offset_top = 20
+
+offset_right = 253
+
+offset_bottom = 66
+
+theme_override_styles/panel = SubResource("TitleCover")
+
+[node name="Title" type="Label" parent="Panel"]
+
+mouse_filter = 2
+
+offset_left = 109
+
+offset_top = 22
+
+offset_right = 251
+
+offset_bottom = 65
+
+text = "生产订单"
+
+theme_override_font_sizes/font_size = 30
+
+theme_override_colors/font_color = Color(1, 0.8, 0.18, 1)
+
+vertical_alignment = 1
+
+horizontal_alignment = 1
+
+[node name="CrateIcon" type="TextureRect" parent="Panel"]
+
+mouse_filter = 2
+
+offset_left = 37
+
+offset_top = 85
+
+offset_right = 135
+
+offset_bottom = 169
+
+texture = SubResource("Crate")
+
+expand_mode = 1
+
+stretch_mode = 5
+
+[node name="ArrowIcon" type="TextureRect" parent="Panel"]
+
+mouse_filter = 2
+
+offset_left = 152
+
+offset_top = 108
+
+offset_right = 194
+
+offset_bottom = 147
+
+texture = SubResource("Arrow")
+
+expand_mode = 1
+
+stretch_mode = 5
+
+[node name="PortIcon" type="TextureRect" parent="Panel"]
+
+mouse_filter = 2
+
+offset_left = 213
+
+offset_top = 96
+
+offset_right = 305
+
+offset_bottom = 158
+
+texture = SubResource("Port")
+
+expand_mode = 1
+
+stretch_mode = 5
+
+[node name="DeliveryCount" type="Label" parent="Panel"]
+
+mouse_filter = 2
+
+offset_left = 320
+
+offset_top = 91
+
+offset_right = 431
+
+offset_bottom = 167
+
+text = "0/1"
+
+theme_override_font_sizes/font_size = 46
+
+theme_override_colors/font_color = Color(0.08, 0.075, 0.06, 1)
+
+vertical_alignment = 1
+
+horizontal_alignment = 1
+
+[node name="TaskStrip" type="Panel" parent="Panel"]
+
+mouse_filter = 2
+
+offset_left = 24
+
+offset_top = 180
+
+offset_right = 436
+
+offset_bottom = 218
+
+theme_override_styles/panel = SubResource("TaskStrip")
+
+[node name="Description" type="Label" parent="Panel"]
+
+mouse_filter = 2
+
+offset_left = 27
+
+offset_top = 180
+
+offset_right = 433
+
+offset_bottom = 218
+
+text = "生产并交付 1 箱电池组"
+
+theme_override_font_sizes/font_size = 22
+
+theme_override_colors/font_color = Color(0.08, 0.075, 0.06, 1)
+
+vertical_alignment = 1
+
+horizontal_alignment = 1
+
+[node name="Divider" type="ColorRect" parent="Panel"]
+
+mouse_filter = 2
+
+offset_left = 24
+
+offset_top = 229
+
+offset_right = 436
+
+offset_bottom = 231
+
+color = Color(0.40, 0.37, 0.29, 0.6)
+
+[node name="BatteryIcon" type="TextureRect" parent="Panel"]
+
+mouse_filter = 2
+
+offset_left = 25
+
+offset_top = 244
+
+offset_right = 63
+
+offset_bottom = 283
+
+texture = SubResource("Battery")
+
+expand_mode = 1
+
+stretch_mode = 5
+
+[node name="PackingTitle" type="Label" parent="Panel"]
+
+mouse_filter = 2
+
+offset_left = 65
+
+offset_top = 246
+
+offset_right = 166
+
+offset_bottom = 282
+
+text = "装箱进度"
+
+theme_override_font_sizes/font_size = 20
+
+theme_override_colors/font_color = Color(0.08, 0.075, 0.06, 1)
+
+vertical_alignment = 1
+
+horizontal_alignment = 1
+
+[node name="ProgressBar" type="TextureRect" parent="Panel"]
+
+mouse_filter = 2
+
+offset_left = 170
+
+offset_top = 245
+
+offset_right = 355
+
+offset_bottom = 289.18
+
+texture = SubResource("Bar")
+
+expand_mode = 1
+
+stretch_mode = 5
+
+[node name="Fill1" type="TextureRect" parent="Panel/ProgressBar"]
+
+mouse_filter = 2
+
+offset_left = 11.1
+
+offset_top = 7.1
+
+offset_right = 37.6
+
+offset_bottom = 35.35
+
+texture = SubResource("Fill")
+
+expand_mode = 1
+
+stretch_mode = 5
+
+visible = false
+
+[node name="Fill2" type="TextureRect" parent="Panel/ProgressBar"]
+
+mouse_filter = 2
+
+offset_left = 45.42
+
+offset_top = 7.1
+
+offset_right = 71.92
+
+offset_bottom = 35.35
+
+texture = SubResource("Fill")
+
+expand_mode = 1
+
+stretch_mode = 5
+
+visible = false
+
+[node name="Fill3" type="TextureRect" parent="Panel/ProgressBar"]
+
+mouse_filter = 2
+
+offset_left = 79.74
+
+offset_top = 7.1
+
+offset_right = 106.24
+
+offset_bottom = 35.35
+
+texture = SubResource("Fill")
+
+expand_mode = 1
+
+stretch_mode = 5
+
+visible = false
+
+[node name="Fill4" type="TextureRect" parent="Panel/ProgressBar"]
+
+mouse_filter = 2
+
+offset_left = 114.06
+
+offset_top = 7.1
+
+offset_right = 140.56
+
+offset_bottom = 35.35
+
+texture = SubResource("Fill")
+
+expand_mode = 1
+
+stretch_mode = 5
+
+visible = false
+
+[node name="Fill5" type="TextureRect" parent="Panel/ProgressBar"]
+
+mouse_filter = 2
+
+offset_left = 148.38
+
+offset_top = 7.1
+
+offset_right = 174.88
+
+offset_bottom = 35.35
+
+texture = SubResource("Fill")
+
+expand_mode = 1
+
+stretch_mode = 5
+
+visible = false
+
+[node name="PackingCount" type="Label" parent="Panel"]
+
+mouse_filter = 2
+
+offset_left = 365
+
+offset_top = 246
+
+offset_right = 437
+
+offset_bottom = 282
+
+text = "0/5"
+
+theme_override_font_sizes/font_size = 27
+
+theme_override_colors/font_color = Color(0.08, 0.075, 0.06, 1)
+
+vertical_alignment = 1
+
+horizontal_alignment = 1

@@ -669,6 +669,7 @@ func _process(delta: float) -> void:
 
 func _update_score_label() -> void:
 	_score_label.text = "得分: %d   物品数: %d" % [score, items.size()]
+	$UI/OrderHUD.refresh(self)
 
 # ============================================================
 # 坐标转换
@@ -1158,6 +1159,7 @@ func _on_tick() -> void:
 			machine.confirm_output()
 	if is_instance_valid(_packing_machine):
 		_packing_machine.try_pack(self)
+	_update_score_label()
 	# ItemLayer 需要拿到最新数组引用
 	_item_layer.items = items
 	_item_layer.queue_redraw()

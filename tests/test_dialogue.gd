@@ -77,7 +77,7 @@ func _run() -> void:
 	check(main.welding_interaction.operate(), "Interaction restored after dialogue")
 	main._drag_active = true
 	main.play_test_dialogue()
-	check(not welder.processing and welder.cells == 2, "Opening cancels welding without consuming inventory")
+	check(welder.processing and welder.cells == 2, "Dialogue does not cancel autonomous welding")
 	check(not main._drag_active, "Opening cancels unfinished mouse gesture")
 	ui.finish_dialogue()
 	for window_size in [Vector2i(800, 600), Vector2i(1600, 900)]:

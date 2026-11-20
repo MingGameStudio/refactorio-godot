@@ -26,17 +26,18 @@
 [ext_resource type="PackedScene" path="res://WeldingMachine.tscn" id="26_welder"]
 [ext_resource type="AudioStream" uid="uid://bsldi8xjguwh0" path="res://assets/audio/Workshop Groove.mp3" id="27_music"]
 [ext_resource type="PackedScene" path="res://DialogueUI.tscn" id="dialogue_ui"]
+[ext_resource type="Script" uid="uid://c4kws3e61f78a" path="res://InletBox.gd" id="inlet_box"]
+[ext_resource type="Script" uid="uid://cjuqvx104qulc" path="res://PackingMachine.gd" id="packing_machine"]
 [ext_resource type="AudioStream" uid="uid://br471vysl7j42" path="res://assets/audio/sfx/box_insert.wav" id="sfx_insert"]
 [ext_resource type="AudioStream" uid="uid://dpnx2mkoocr62" path="res://assets/audio/sfx/shipment_success.wav" id="sfx_shipment"]
-
 [ext_resource type="PackedScene" path="res://WorkshopWalls.tscn" id="workshop_walls"]
-[ext_resource type="Script" path="res://InletBox.gd" id="inlet_box"]
-[ext_resource type="Script" path="res://PackingMachine.gd" id="packing_machine"]
+
+[ext_resource type="PackedScene" path="res://OrderHUD.tscn" id="order_hud"]
 
 [node name="Main" type="Node2D" unique_id=1685539245]
 script = ExtResource("1_main")
 
-[node name="WorkshopWalls" parent="." instance=ExtResource("workshop_walls")]
+[node name="WorkshopWalls" parent="." unique_id=2077291467 instance=ExtResource("workshop_walls")]
 
 [node name="BackgroundMusic" type="AudioStreamPlayer" parent="." unique_id=1904888994]
 stream = ExtResource("27_music")
@@ -826,13 +827,13 @@ position = Vector2(32, 17)
 scale = Vector2(0.13944134, 0.13944134)
 texture = ExtResource("20_end")
 
-[node name="PackingProgress" type="Label" parent="BuildingLayer/SinkMachine"]
+[node name="PackingProgress" type="Label" parent="BuildingLayer/SinkMachine" unique_id=338869904]
 offset_left = -8.0
 offset_top = -76.0
 offset_right = 72.0
 offset_bottom = -48.0
-theme_override_constants/outline_size = 5
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 5
 theme_override_font_sizes/font_size = 22
 text = "0/5"
 horizontal_alignment = 1
@@ -914,7 +915,6 @@ texture = ExtResource("23_middle")
 [node name="Belt_10_4" type="Node2D" parent="BuildingLayer" unique_id=509211791]
 position = Vector2(640, 256)
 script = ExtResource("18_placed")
-direction = 3
 
 [node name="Surface" type="Sprite2D" parent="BuildingLayer/Belt_10_4" unique_id=1990487736]
 position = Vector2(32, 32)
@@ -949,7 +949,11 @@ position = Vector2(384, 256)
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=410368584]
 
+[node name="OrderHUD" parent="UI" instance=ExtResource("order_hud")]
+
 [node name="ScoreLabel" type="Label" parent="UI" unique_id=744699005]
+visible = false
+mouse_filter = 2
 offset_left = 8.0
 offset_top = 4.0
 offset_right = 400.0
@@ -957,10 +961,18 @@ offset_bottom = 24.0
 text = "得分: 0   物品数: 0"
 
 [node name="HintLabel" type="Label" parent="UI" unique_id=565435607]
-offset_left = 8.0
-offset_top = 24.0
-offset_right = 400.0
-offset_bottom = 42.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = -40.0
+offset_right = -12.0
+offset_bottom = -8.0
+mouse_filter = 2
+autowrap_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
 text = "WASD: 移动  左键: 寻路/搬箱/投料  拖拽: 铺带  E: 拾箱/投料/点焊  B: 放置点焊机  M: 移动机器  右键: 拆除"
 
 [node name="TickTimer" type="Timer" parent="." unique_id=1996499133]
